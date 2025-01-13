@@ -5,6 +5,7 @@ import { DataProvider, MountDataProvider } from '@/core/provider/types.js'
 import qs from 'qs'
 import * as YAML from '@/utils/yaml.js'
 import { table } from 'table'
+import { readJson, readYaml } from '@/utils/filesystem.js'
 
 command('list')
     .flags({
@@ -14,12 +15,11 @@ command('list')
         },
         config: {
             name: 'config',
-            schema: (v) =>
-                v.pipe(
-                    v.string(),
-                    v.transform((value) => qs.parse(value) as Record<string, any>),
-                    v.record(v.string(), v.any())
-                ),
+            schema: (v) => v.extras.vars,
+        },
+        where: {
+            name: 'where',
+            schema: (v) => v.optional(v.extras.vars),
         },
         format: {
             name: 'format',
@@ -43,7 +43,9 @@ command('list')
             drive,
         })
 
-        const items = await provider.list()
+        const items = await provider.list({
+            where: flags.where,
+        })
 
         if (flags.format == 'json') {
             console.log(JSON.stringify(items))

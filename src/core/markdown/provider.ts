@@ -2,6 +2,8 @@ import { resolve } from 'path'
 import { Drive } from '../drive/types.js'
 import { defineProvider } from '../provider/defineProvider.js'
 import * as YAML from '@/utils/yaml.js'
+import { DataProvider } from '../provider/types.js'
+import { queryArray } from '../provider/queryArray.js'
 
 interface Config {
     path: string
@@ -14,7 +16,9 @@ export const provider = defineProvider((config: Config) => {
 
     const include = config.include || []
 
-    async function list() {
+    const list: DataProvider['list'] = async (options) => {
+        const where = options?.where || {}
+
         const files = await drive.list(path)
         const result = [] as any[]
 
@@ -51,7 +55,7 @@ export const provider = defineProvider((config: Config) => {
             result.push(properies)
         }
 
-        return result
+        return queryArray(result, where)
     }
 
     return {

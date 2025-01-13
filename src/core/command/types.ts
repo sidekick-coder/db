@@ -1,5 +1,6 @@
 import * as v from 'valibot'
 import type { Context } from '@sidekick-coder/compositor'
+import { ValibotWithExtras } from '@/core/validator/index.js'
 
 export interface BaseContext extends Context {
     args: Record<string, any>
@@ -11,7 +12,7 @@ export type Valibot = typeof v
 export interface Option<T extends v.BaseSchema<any, any, any> = v.BaseSchema<any, any, any>> {
     name: string
     description?: string
-    schema?: (v: Valibot) => T
+    schema?: (v: ValibotWithExtras) => T
 }
 
 /* eslint-disable */

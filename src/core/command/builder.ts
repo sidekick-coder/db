@@ -1,4 +1,4 @@
-import * as v from 'valibot'
+import { vWithExtras as v } from '../validator/index.js'
 import { type Chain, compose, createChain } from '@sidekick-coder/compositor'
 import { Arg, BaseContext, CommandDefinition, ExecuteFn, Flag, OptionRecord } from './types.js'
 import { addCommand } from './register.js'
@@ -11,7 +11,7 @@ export interface Builder<A extends OptionRecord<Arg>, F extends OptionRecord<Fla
 }
 
 function validate<T extends OptionRecord>(options: T, input: Record<string, any>) {
-    const entries = {} as v.ObjectEntries
+    const entries = {} as any
 
     for (const [key, value] of Object.entries(options)) {
         entries[key] = value.schema ? value.schema(v) : v.any()

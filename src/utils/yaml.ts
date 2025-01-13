@@ -1,9 +1,5 @@
 import { parse as baseParse, stringify as baseStringify } from 'yaml'
 
-export function parse(xml: string): Document {
-    return baseParse(xml)
-}
+export const parse = baseParse
 
-export function stringify(doc: any): string {
-    return baseStringify(doc)
-}
+export const stringify = baseStringify
