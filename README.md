@@ -2,8 +2,8 @@
 
 ## Tasks
 
-- [ ] setup cli commands
-- [ ] read config file
+- [x] setup cli commands
+- [x] read config file
 - [ ] provider manager
 - [ ] command: list
 - [ ] command: create
@@ -14,3 +14,4 @@
 
 - [ ]  add tests
 - [ ]  add aggregation command (sum, avg, group by, etc)
+

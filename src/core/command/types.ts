@@ -16,15 +16,13 @@ export interface Option<T extends v.BaseSchema<any, any, any> = v.BaseSchema<any
 
 /* eslint-disable */
 export type OptionType<T extends Option> =
-    T extends { schema: (v: Valibot) => v.BaseSchema<infer R, any, any> } ? R :
     T extends { schema: (v: Valibot) => v.BaseSchema<any, infer R, any> } ? R :
-    T extends { schema: (v: Valibot) => v.BaseSchema<any, any, infer R> } ? R :
     any
 /* eslint-enable */
 export interface Arg extends Option {}
 
 export interface Flag extends Option {
-    alias: string[]
+    alias?: string[]
 }
 
 export interface OptionRecord<T extends Option = Option> extends Record<string, T> {}
