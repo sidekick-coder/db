@@ -1,5 +1,7 @@
 import fs from 'fs'
 import * as YAML from './yaml.js'
+import { dirname } from 'path'
+import { reviver } from '@/core/config/transform.js'
 
 export function readFile(path: string) {
     return fs.readFileSync(path, 'utf-8')
@@ -40,11 +42,15 @@ export function readConfig(filename: string[] | string) {
         }
 
         if (path.endsWith('.json')) {
-            return readJson(path)
+            return readJson(path, {
+                reviver: reviver(dirname(path)),
+            })
         }
 
         if (path.endsWith('.yaml') || path.endsWith('.yml')) {
-            return readYaml(path)
+            return readYaml(path, {
+                reviver: reviver(dirname(path)),
+            })
         }
     }
 }

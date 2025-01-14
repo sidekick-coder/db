@@ -17,8 +17,10 @@ async function run() {
         resolve(process.cwd(), 'db.config.json'),
     ]
 
-    if (flags.config || flags.c) {
-        files.unshift(resolve(process.cwd(), flags.config || flags.c))
+    console.log(flags)
+
+    if (flags['db-config']) {
+        files.unshift(resolve(process.cwd(), flags['db-config']))
     }
 
     const raw = readConfig(files)
