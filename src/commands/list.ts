@@ -1,11 +1,9 @@
 import { command } from '@/core/command/index.js'
 import { drive } from '@/core/drive/index.js'
 import * as markdown from '@/core/markdown/index.js'
-import { DataProvider, MountDataProvider } from '@/core/provider/types.js'
-import qs from 'qs'
+import { MountDataProvider } from '@/core/provider/types.js'
 import * as YAML from '@/utils/yaml.js'
 import { table } from 'table'
-import { readJson, readYaml } from '@/utils/filesystem.js'
 
 command('list')
     .flags({
@@ -20,6 +18,28 @@ command('list')
         where: {
             name: 'where',
             schema: (v) => v.optional(v.extras.vars),
+        },
+        include: {
+            name: 'include',
+            schema: (v) =>
+                v.optional(
+                    v.pipe(
+                        v.string(),
+                        v.transform((v) => v.split(',')),
+                        v.array(v.string())
+                    )
+                ),
+        },
+        exclude: {
+            name: 'exclude',
+            schema: (v) =>
+                v.optional(
+                    v.pipe(
+                        v.string(),
+                        v.transform((v) => v.split(',')),
+                        v.array(v.string())
+                    )
+                ),
         },
         format: {
             name: 'format',
@@ -45,6 +65,8 @@ command('list')
 
         const items = await provider.list({
             where: flags.where,
+            include: flags.include,
+            exclude: flags.exclude,
         })
 
         if (flags.format == 'json') {

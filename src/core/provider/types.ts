@@ -15,6 +15,11 @@ export interface WhereMain {
 
 export type Where = WhereMain & WhereGroup
 
+export interface Field {
+    exclude?: string[]
+    include?: string[]
+}
+
 export interface Sort {
     sortBy: string | string[]
     sortDesc?: boolean | boolean[]
@@ -23,6 +28,8 @@ export interface Sort {
 export interface ListOptions {
     where?: Where
     sort?: Sort
+    exclude?: string[]
+    include?: string[]
 }
 
 export interface DataItem {
@@ -32,6 +39,7 @@ export interface DataItem {
 export interface DataProvider {
     list: (options?: ListOptions) => Promise<DataItem[]>
     create: (data: any) => Promise<DataItem>
+    update: (data: any, where?: Where) => Promise<{ count: number }>
 }
 
 export interface MountDataProvider {

@@ -5,27 +5,22 @@ import * as YAML from '@/utils/yaml.js'
 import { DataProvider } from '../provider/types.js'
 import { queryArray } from '../provider/queryArray.js'
 
+import omit from 'lodash/omit'
+import pick from 'lodash/pick'
+
 interface Config {
     path: string
     drive: Drive
     include?: string[]
 }
 
-function exerpt(content: string, length = 100) {
-    if (content.length <= length) {
-        return content
-    }
-
-    return content.slice(0, 100) + '...'
-}
-
 export const provider = defineProvider((config: Config) => {
     const { path, drive } = config
 
-    const include = config.include || []
-
     const list: DataProvider['list'] = async (options) => {
         const where = options?.where || {}
+        const exclude = options?.exclude || config.include || ['$raw', '$filename', '$body']
+        const include = options?.include || config.include || []
 
         const files = await drive.list(path)
         const result = [] as any[]
@@ -48,24 +43,24 @@ export const provider = defineProvider((config: Config) => {
                 body = rest.trim()
             }
 
-            if (include.includes('raw')) {
-                properies['_raw'] = raw
-            }
-
-            if (include.includes('filename')) {
-                properies['_filename'] = filename
-            }
-
-            if (include.includes('fullbody')) {
-                properies['fullbody'] = body
-            }
-
-            properies.exerpt = exerpt(body)
+            properies['$raw'] = raw
+            properies['$filename'] = filename
+            properies['$body'] = body || ''
 
             result.push(properies)
         }
 
-        return queryArray(result, where)
+        let items = queryArray(result, where)
+
+        if (include.length) {
+            items = items.map((item) => pick(item, include))
+        }
+
+        if (exclude.length) {
+            items = items.map((item) => omit(item, exclude))
+        }
+
+        return items
     }
 
     const create: DataProvider['create'] = async (data) => {
@@ -79,8 +74,25 @@ export const provider = defineProvider((config: Config) => {
         return data
     }
 
+    const update: DataProvider['update'] = async (data, where) => {
+        const items = await list({ where })
+
+        for (const item of items) {
+            const filename = resolve(path, `${item.id}.md`)
+            const newData = { ...item, ...data }
+            const body = newData.body || item.body
+
+            const content = `---\n${YAML.stringify(newData)}---\n${body}`
+
+            await drive.write(filename, content)
+        }
+
+        return { count: items.length }
+    }
+
     return {
         list,
         create,
+        update,
     }
 })
