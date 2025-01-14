@@ -6,7 +6,7 @@ import * as YAML from '@/utils/yaml.js'
 import { table } from 'table'
 
 command('create')
-    .flags({
+    .options({
         provider: {
             name: 'provider',
             schema: (v) => v.string(),
@@ -20,24 +20,24 @@ command('create')
             schema: (v) => v.extras.vars,
         },
     })
-    .handle(async ({ flags }) => {
+    .handle(async ({ options }) => {
         const providers: Record<string, MountDataProvider> = {
             markdown: markdown.provider,
         }
 
-        const mount = providers[flags.provider]
+        const mount = providers[options.provider]
 
         if (!mount) {
-            console.error(`Provider "${flags.provider}" not found`)
+            console.error(`Provider "${options.provider}" not found`)
             return
         }
 
         const provider = mount({
-            ...flags.config,
+            ...options.config,
             drive,
         })
 
-        const item = await provider.create(flags.data)
+        const item = await provider.create(options.data)
 
         console.log(table(Object.entries(item)))
     })

@@ -1,13 +1,11 @@
 import { vWithExtras as v } from '../validator/index.js'
 import { type Chain, compose, createChain } from '@sidekick-coder/compositor'
-import { Arg, BaseContext, CommandDefinition, ExecuteFn, Flag, OptionRecord } from './types.js'
+import { BaseContext, CommandDefinition, ExecuteFn, OptionRecord } from './types.js'
 import { addCommand } from './register.js'
 
-export interface Builder<A extends OptionRecord<Arg>, F extends OptionRecord<Flag>>
-    extends Chain<BaseContext> {
-    handle(cb: ExecuteFn<A, F>): void
-    args<T extends OptionRecord<Arg>>(args: T): Builder<T, F>
-    flags<T extends OptionRecord<Flag>>(flags: T): Builder<A, T>
+export interface Builder<T extends OptionRecord = {}> extends Chain<BaseContext> {
+    handle(cb: ExecuteFn<T>): void
+    options<O extends OptionRecord>(args: O): Builder<O>
 }
 
 function validate<T extends OptionRecord>(options: T, input: Record<string, any>) {
@@ -23,31 +21,17 @@ function validate<T extends OptionRecord>(options: T, input: Record<string, any>
 }
 
 export function command(name: string) {
-    let $args = {} as OptionRecord<Arg>
-    let $flags = {} as OptionRecord<Flag>
+    let $options = {}
 
-    const chain = createChain<BaseContext, Builder<{}, {}>>({
+    const chain = createChain<BaseContext, Builder>({
         handle: (cb) => {
             const definition: CommandDefinition = {
                 name,
-                args: $args,
-                flags: $flags,
+                options: $options,
                 run: async (ctx) => {
-                    // parse args
-                    const args = Object.keys($args).reduce(
-                        (acc, key, index) => ({
-                            ...acc,
-                            [key]: ctx.args[index],
-                        }),
-                        {}
-                    )
+                    const options = validate($options, ctx)
 
-                    const result = {
-                        args: validate($args, args),
-                        flags: validate($flags, ctx.flags),
-                    }
-
-                    const fullCtx = compose([result, ...chain.modifiers])
+                    const fullCtx = compose([ctx, { options }, ...chain.modifiers])
 
                     return cb(fullCtx)
                 },
@@ -55,17 +39,12 @@ export function command(name: string) {
 
             addCommand(name, definition)
         },
-        args<T extends OptionRecord<Arg>>(args: T) {
-            $args = args
-
-            return chain
-        },
-        flags<T extends OptionRecord<Flag>>(flags: T) {
-            $flags = flags
+        options<T extends OptionRecord>(options: T) {
+            $options = options
 
             return chain
         },
     })
 
-    return chain as Builder<{}, {}>
+    return chain as Builder
 }

@@ -20,3 +20,31 @@ export function readYaml<T = any>(path: string, options?: any): T {
 
     return YAML.parse(content, options?.reviver) as T
 }
+
+export function readOneIfExists(...paths: string[]) {
+    for (const path of paths) {
+        if (fs.existsSync(path)) {
+            return readFile(path)
+        }
+    }
+
+    return null
+}
+
+export function readConfig(filename: string[] | string) {
+    const paths = Array.isArray(filename) ? filename : [filename]
+
+    for (const path of paths) {
+        if (!fs.existsSync(path)) {
+            continue
+        }
+
+        if (path.endsWith('.json')) {
+            return readJson(path)
+        }
+
+        if (path.endsWith('.yaml') || path.endsWith('.yml')) {
+            return readYaml(path)
+        }
+    }
+}

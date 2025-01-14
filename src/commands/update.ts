@@ -6,7 +6,7 @@ import { table } from 'table'
 import { confirm } from '@inquirer/prompts'
 
 command('update')
-    .flags({
+    .options({
         provider: {
             name: 'provider',
             schema: (v) => v.string(),
@@ -24,24 +24,24 @@ command('update')
             schema: (v) => v.extras.vars,
         },
     })
-    .handle(async ({ flags }) => {
+    .handle(async ({ options }) => {
         const providers: Record<string, MountDataProvider> = {
             markdown: markdown.provider,
         }
 
-        const mount = providers[flags.provider]
+        const mount = providers[options.provider]
 
         if (!mount) {
-            console.error(`Provider "${flags.provider}" not found`)
+            console.error(`Provider "${options.provider}" not found`)
             return
         }
 
         const provider = mount({
-            ...flags.config,
+            ...options.config,
             drive,
         })
 
-        const items = await provider.list({ where: flags.where })
+        const items = await provider.list({ where: options.where })
 
         const confirmation = await confirm({
             message: `This will update ${items.length} items. Are you sure?`,
@@ -51,7 +51,7 @@ command('update')
             return
         }
 
-        const item = await provider.update(flags.data, flags.where)
+        const item = await provider.update(options.data, flags.where)
 
         console.log(table(Object.entries(item)))
     })

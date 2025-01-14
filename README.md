@@ -4,16 +4,17 @@
 
 - [x] setup cli commands
 - [x] read config file
-- [ ] provider manager
 - [x] command: list
 - [x] command: create
 - [x] command: update
-- [ ] command: delete
-- [ ] markdown provider 
+- [x] command: delete
+- [ ] db.config.yml config to set default data sources
+- [ ] provider manager
+- [x] markdown provider 
     - [x] list 
     - [x] create 
     - [x] update 
-    - [ ] delete
+    - [x] delete
 - [ ] folder provider 
     - [ ] list 
     - [ ] create 
@@ -24,6 +25,12 @@
     - [ ] create 
     - [ ] update 
     - [ ] delete
+- [ ] yaml provider 
+    - [ ] list 
+    - [ ] create 
+    - [ ] update 
+    - [ ] delete
+
 
 ## Good to have
 

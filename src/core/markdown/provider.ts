@@ -5,8 +5,8 @@ import * as YAML from '@/utils/yaml.js'
 import { DataProvider } from '../provider/types.js'
 import { queryArray } from '../provider/queryArray.js'
 
-import omit from 'lodash/omit'
-import pick from 'lodash/pick'
+import omit from 'lodash-es/omit.js'
+import pick from 'lodash-es/pick.js'
 
 interface Config {
     path: string
@@ -19,7 +19,7 @@ export const provider = defineProvider((config: Config) => {
 
     const list: DataProvider['list'] = async (options) => {
         const where = options?.where || {}
-        const exclude = options?.exclude || config.include || ['$raw', '$filename', '$body']
+        const exclude = options?.exclude || config.include || ['_raw', '_filename', '_body']
         const include = options?.include || config.include || []
 
         const files = await drive.list(path)
@@ -43,9 +43,9 @@ export const provider = defineProvider((config: Config) => {
                 body = rest.trim()
             }
 
-            properies['$raw'] = raw
-            properies['$filename'] = filename
-            properies['$body'] = body || ''
+            properies['_raw'] = raw
+            properies['_filename'] = filename
+            properies['_body'] = body || ''
 
             result.push(properies)
         }

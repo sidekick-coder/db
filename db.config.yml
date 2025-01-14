@@ -1,0 +1,7 @@
+default_database: markdown
+
+databases:
+  - name: markdown 
+    provider: markdown
+    config:
+      path: ./playground/markdown/data

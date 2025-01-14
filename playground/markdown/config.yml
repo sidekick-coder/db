@@ -1,2 +1,3 @@
 provider: markdown 
-path: ./data
+config:
+  path: ./data

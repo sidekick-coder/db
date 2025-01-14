@@ -6,7 +6,7 @@ import { table } from 'table'
 import { confirm } from '@inquirer/prompts'
 
 command('destroy')
-    .flags({
+    .options({
         provider: {
             name: 'provider',
             schema: (v) => v.string(),
@@ -20,24 +20,24 @@ command('destroy')
             schema: (v) => v.optional(v.extras.vars),
         },
     })
-    .handle(async ({ flags }) => {
+    .handle(async ({ options }) => {
         const providers: Record<string, MountDataProvider> = {
             markdown: markdown.provider,
         }
 
-        const mount = providers[flags.provider]
+        const mount = providers[options.provider]
 
         if (!mount) {
-            console.error(`Provider "${flags.provider}" not found`)
+            console.error(`Provider "${options.provider}" not found`)
             return
         }
 
         const provider = mount({
-            ...flags.config,
+            ...options.config,
             drive,
         })
 
-        const items = await provider.list({ where: flags.where })
+        const items = await provider.list({ where: options.where })
 
         const confirmation = await confirm({
             message: `This will delete ${items.length} items. Are you sure?`,
@@ -47,7 +47,7 @@ command('destroy')
             return
         }
 
-        const item = await provider.destroy(flags.where)
+        const item = await provider.destroy(options.where)
 
         console.log(table(Object.entries(item)))
     })

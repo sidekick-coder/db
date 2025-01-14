@@ -6,14 +6,14 @@ import * as YAML from '@/utils/yaml.js'
 import { table } from 'table'
 
 command('list')
-    .flags({
+    .options({
         provider: {
             name: 'provider',
             schema: (v) => v.string(),
         },
         config: {
             name: 'config',
-            schema: (v) => v.extras.vars,
+            schema: (v) => v.record(v.string(), v.any()),
         },
         where: {
             name: 'where',
@@ -46,35 +46,44 @@ command('list')
             schema: (v) => v.optional(v.picklist(['default', 'json', 'yaml'])),
         },
     })
-    .handle(async ({ flags }) => {
+    .handle(async ({ options }) => {
+        const providerName = options.provider
+        const config = options.config
+
+        const where = options.where || {}
+        const include = options.include
+        const exclude = options.exclude
+
+        const format = options.format
+
         const providers: Record<string, MountDataProvider> = {
             markdown: markdown.provider,
         }
 
-        const mount = providers[flags.provider]
+        const mount = providers[providerName]
 
         if (!mount) {
-            console.error(`Provider "${flags.provider}" not found`)
+            console.error(`Provider "${providerName}" not found`)
             return
         }
 
         const provider = mount({
-            ...flags.config,
+            ...config,
             drive,
         })
 
         const items = await provider.list({
-            where: flags.where,
-            include: flags.include,
-            exclude: flags.exclude,
+            where: where,
+            include: include,
+            exclude: exclude,
         })
 
-        if (flags.format == 'json') {
+        if (format == 'json') {
             console.log(JSON.stringify(items))
             return
         }
 
-        if (flags.format == 'yaml') {
+        if (format == 'yaml') {
             console.log(YAML.stringify(items))
             return
         }
