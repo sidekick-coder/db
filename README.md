@@ -1,11 +1,11 @@
-<center>
+<div align="center">
 
 # db
 
 A simple cli to manage your data  
 [npm](https://www.npmjs.com/package/@sidekick-coder/compositor)
 
-</center>
+</div>
 
 ## Roadmap
 
@@ -16,6 +16,7 @@ A simple cli to manage your data
 - [ ] sql provider
 - [ ] csv provider
 - [ ] aggregation command (sum, avg, group by, etc)
+- [ ] extendable providers
 
 ## Installation
 
