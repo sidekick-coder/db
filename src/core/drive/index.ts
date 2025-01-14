@@ -11,4 +11,7 @@ export const drive: Drive = {
     write: (path, content) => {
         return fs.writeFile(path, content, 'utf-8')
     },
+    destroy: (path) => {
+        return fs.rm(path)
+    },
 }

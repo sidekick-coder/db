@@ -6,13 +6,13 @@
 - [x] read config file
 - [ ] provider manager
 - [x] command: list
-- [ ] command: create
-- [ ] command: update
+- [x] command: create
+- [x] command: update
 - [ ] command: delete
 - [ ] markdown provider 
-    - [ ] list 
-    - [ ] create 
-    - [ ] update 
+    - [x] list 
+    - [x] create 
+    - [x] update 
     - [ ] delete
 - [ ] folder provider 
     - [ ] list 

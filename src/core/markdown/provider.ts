@@ -56,7 +56,7 @@ export const provider = defineProvider((config: Config) => {
             items = items.map((item) => pick(item, include))
         }
 
-        if (exclude.length) {
+        if (exclude.length && !include.length) {
             items = items.map((item) => omit(item, exclude))
         }
 
@@ -90,9 +90,22 @@ export const provider = defineProvider((config: Config) => {
         return { count: items.length }
     }
 
+    const destroy: DataProvider['destroy'] = async (where) => {
+        const items = await list({ where, include: ['$filename'] })
+
+        console.log(items)
+
+        for (const item of items) {
+            await drive.destroy(item.$filename)
+        }
+
+        return { count: items.length }
+    }
+
     return {
         list,
         create,
         update,
+        destroy,
     }
 })
