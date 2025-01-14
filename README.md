@@ -15,7 +15,9 @@ A simple cli to manage your data
 - [ ] yaml provider
 - [ ] sql provider
 - [ ] csv provider
+
 - [ ] aggregation command (sum, avg, group by, etc)
+- [ ] pagination
 - [ ] extendable providers
 
 ## Installation

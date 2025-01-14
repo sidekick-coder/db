@@ -2,7 +2,6 @@ import { command } from '@/core/command/index.js'
 import { drive } from '@/core/drive/index.js'
 import * as markdown from '@/core/markdown/index.js'
 import { MountDataProvider } from '@/core/provider/types.js'
-import { table } from 'table'
 import { confirm } from '@inquirer/prompts'
 
 command('destroy')

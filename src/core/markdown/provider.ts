@@ -21,6 +21,8 @@ export const provider = defineProvider((config: Config) => {
         const where = options?.where || {}
         const exclude = options?.exclude || config.include || ['_raw', '_filename', '_body']
         const include = options?.include || config.include || []
+        const limit = options?.pagination?.limit
+        const page = options?.pagination?.page || 1
 
         const files = await drive.list(path)
         const result = [] as any[]
@@ -60,7 +62,23 @@ export const provider = defineProvider((config: Config) => {
             items = items.map((item) => omit(item, exclude))
         }
 
-        return items
+        if (limit) {
+            const start = (page - 1) * limit
+            const end = start + limit
+
+            items = items.slice(start, end)
+        }
+
+        const response = {
+            meta: {
+                total: result.length,
+                limit,
+                total_pages: limit ? Math.ceil(result.length / limit) : 1,
+            },
+            data: items,
+        }
+
+        return response
     }
 
     const create: DataProvider['create'] = async (data) => {
@@ -78,7 +96,7 @@ export const provider = defineProvider((config: Config) => {
     }
 
     const update: DataProvider['update'] = async (data, where) => {
-        const items = await list({ where })
+        const { data: items } = await list({ where })
 
         for (const item of items) {
             const filename = resolve(path, `${item.id}.md`)
@@ -94,7 +112,7 @@ export const provider = defineProvider((config: Config) => {
     }
 
     const destroy: DataProvider['destroy'] = async (where) => {
-        const items = await list({ where, include: ['_filename'] })
+        const { data: items } = await list({ where, include: ['_filename'] })
 
         for (const item of items) {
             await drive.destroy(item._filename)

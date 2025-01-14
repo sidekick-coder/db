@@ -3,7 +3,7 @@ import { drive } from '@/core/drive/index.js'
 import * as markdown from '@/core/markdown/index.js'
 import { MountDataProvider } from '@/core/provider/types.js'
 import * as YAML from '@/utils/yaml.js'
-import { table } from 'table'
+import { cliui } from '@poppinss/cliui'
 
 command('list')
     .options({
@@ -17,6 +17,10 @@ command('list')
         },
         where: {
             name: 'where',
+            schema: (v) => v.optional(v.extras.vars),
+        },
+        pagination: {
+            name: 'pagination',
             schema: (v) => v.optional(v.extras.vars),
         },
         include: {
@@ -53,6 +57,7 @@ command('list')
         const where = options.where || {}
         const include = options.include
         const exclude = options.exclude
+        const pagination = options.pagination
 
         const format = options.format
 
@@ -72,25 +77,63 @@ command('list')
             drive,
         })
 
-        const items = await provider.list({
+        const response = await provider.list({
             where: where,
             include: include,
             exclude: exclude,
+            pagination: pagination,
         })
 
         if (format == 'json') {
-            console.log(JSON.stringify(items))
+            console.log(JSON.stringify(response))
             return
         }
 
         if (format == 'yaml') {
-            console.log(YAML.stringify(items))
+            console.log(YAML.stringify(response))
             return
         }
 
-        items.forEach((item) => {
-            const data = Object.entries(item)
+        const { meta, data: items } = response
+        const ui = cliui()
 
-            console.log(table(data))
+        const metaTable = ui.table()
+
+        metaTable.head([
+            {
+                content: ui.colors.cyan('Meta'),
+                colSpan: 2,
+            },
+        ])
+
+        Object.entries(meta).forEach(([key, value]) => metaTable.row([String(key), String(value)]))
+
+        metaTable.render()
+
+        const header = [] as string[]
+        const rows = [] as string[][]
+
+        items.forEach((item) => {
+            Object.keys(item).forEach((key) => {
+                if (!header.includes(key)) {
+                    header.push(key)
+                }
+            })
+
+            const row = [] as string[]
+
+            header.forEach((key) => {
+                row.push(String(item[key] || ''))
+            })
+
+            rows.push(row)
         })
+
+        const table = ui.table()
+
+        table.head(header)
+
+        rows.forEach((row) => table.row(row))
+
+        table.render()
     })

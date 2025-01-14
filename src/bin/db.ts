@@ -9,15 +9,13 @@ async function run() {
 
     const { _: allArgs, ...flags } = minimist(process.argv.slice(2))
 
-    const [name, ...args] = allArgs
+    const [name] = allArgs
 
     const files = [
         resolve(process.cwd(), 'db.config.yml'),
         resolve(process.cwd(), 'db.config.yaml'),
         resolve(process.cwd(), 'db.config.json'),
     ]
-
-    console.log(flags)
 
     if (flags['db-config']) {
         files.unshift(resolve(process.cwd(), flags['db-config']))
