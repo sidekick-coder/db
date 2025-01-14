@@ -7,8 +7,12 @@ type Valibot = typeof v
 
 const vars = v.optional(
     v.pipe(
-        v.string(),
+        v.any(),
         v.transform((value) => {
+            if (typeof value == 'object') {
+                return value
+            }
+
             if (value.startsWith('@') && value.endsWith('.json')) {
                 return readJson(value.replace(/^@/, ''), {
                     transformRelativePaths: true,

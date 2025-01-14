@@ -13,7 +13,7 @@ command('list')
         },
         config: {
             name: 'config',
-            schema: (v) => v.record(v.string(), v.any()),
+            schema: (v) => v.extras.vars,
         },
         where: {
             name: 'where',

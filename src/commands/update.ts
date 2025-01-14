@@ -25,6 +25,8 @@ command('update')
         },
     })
     .handle(async ({ options }) => {
+        const where = options.where || {}
+
         const providers: Record<string, MountDataProvider> = {
             markdown: markdown.provider,
         }
@@ -43,15 +45,17 @@ command('update')
 
         const items = await provider.list({ where: options.where })
 
-        const confirmation = await confirm({
-            message: `This will update ${items.length} items. Are you sure?`,
-        })
+        if (items.length > 1) {
+            const confirmation = await confirm({
+                message: `This will update ${items.length} items. Are you sure?`,
+            })
 
-        if (!confirmation) {
-            return
+            if (!confirmation) {
+                return
+            }
         }
 
-        const item = await provider.update(options.data, flags.where)
+        const item = await provider.update(options.data, where)
 
         console.log(table(Object.entries(item)))
     })

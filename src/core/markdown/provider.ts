@@ -65,8 +65,11 @@ export const provider = defineProvider((config: Config) => {
 
     const create: DataProvider['create'] = async (data) => {
         const body = data.body || ''
+        const properies = omit(data, 'body')
         const filename = resolve(path, `${data.id}.md`)
-        const frontmatter = YAML.stringify(data)
+
+        const frontmatter = YAML.stringify(properies)
+
         const content = `---\n${frontmatter}---\n${body}`
 
         await drive.write(filename, content)
@@ -91,12 +94,10 @@ export const provider = defineProvider((config: Config) => {
     }
 
     const destroy: DataProvider['destroy'] = async (where) => {
-        const items = await list({ where, include: ['$filename'] })
-
-        console.log(items)
+        const items = await list({ where, include: ['_filename'] })
 
         for (const item of items) {
-            await drive.destroy(item.$filename)
+            await drive.destroy(item._filename)
         }
 
         return { count: items.length }

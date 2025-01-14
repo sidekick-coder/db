@@ -2,7 +2,6 @@ import { command } from '@/core/command/index.js'
 import { drive } from '@/core/drive/index.js'
 import * as markdown from '@/core/markdown/index.js'
 import { MountDataProvider } from '@/core/provider/types.js'
-import * as YAML from '@/utils/yaml.js'
 import { table } from 'table'
 
 command('create')
