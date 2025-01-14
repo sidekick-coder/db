@@ -31,6 +31,7 @@ export interface DataItem {
 
 export interface DataProvider {
     list: (options?: ListOptions) => Promise<DataItem[]>
+    create: (data: any) => Promise<DataItem>
 }
 
 export interface MountDataProvider {

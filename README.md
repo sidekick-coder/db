@@ -9,17 +9,26 @@
 - [ ] command: create
 - [ ] command: update
 - [ ] command: delete
+- [ ] markdown provider 
+    - [ ] list 
+    - [ ] create 
+    - [ ] update 
+    - [ ] delete
+- [ ] folder provider 
+    - [ ] list 
+    - [ ] create 
+    - [ ] update 
+    - [ ] delete 
+- [ ] json provider 
+    - [ ] list 
+    - [ ] create 
+    - [ ] update 
+    - [ ] delete
 
 ## Good to have
 
 - [ ]  add tests
 - [ ]  add aggregation command (sum, avg, group by, etc)
-
-## Usage
-
-```zsh
-db list --provider markdown --config "path=./playground/markdown&include[]=filename" --where "tags[value]=test&tags[operator]=in"
-```
 
 ## Variables
 

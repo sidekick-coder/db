@@ -11,6 +11,14 @@ interface Config {
     include?: string[]
 }
 
+function exerpt(content: string, length = 100) {
+    if (content.length <= length) {
+        return content
+    }
+
+    return content.slice(0, 100) + '...'
+}
+
 export const provider = defineProvider((config: Config) => {
     const { path, drive } = config
 
@@ -28,7 +36,7 @@ export const provider = defineProvider((config: Config) => {
 
             const raw = content
             let body = content
-            const properies = {
+            const properies: any = {
                 id: file.replace(/\.md$/, ''),
             }
 
@@ -48,9 +56,11 @@ export const provider = defineProvider((config: Config) => {
                 properies['_filename'] = filename
             }
 
-            if (include.includes('body')) {
-                properies['body'] = body
+            if (include.includes('fullbody')) {
+                properies['fullbody'] = body
             }
+
+            properies.exerpt = exerpt(body)
 
             result.push(properies)
         }
@@ -58,7 +68,19 @@ export const provider = defineProvider((config: Config) => {
         return queryArray(result, where)
     }
 
+    const create: DataProvider['create'] = async (data) => {
+        const body = data.body || ''
+        const filename = resolve(path, `${data.id}.md`)
+        const frontmatter = YAML.stringify(data)
+        const content = `---\n${frontmatter}---\n${body}`
+
+        await drive.write(filename, content)
+
+        return data
+    }
+
     return {
         list,
+        create,
     }
 })

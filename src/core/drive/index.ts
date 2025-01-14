@@ -1,17 +1,14 @@
-import { resolve } from 'path'
-import { list } from './list.js'
-import { read } from './read.js'
 import { Drive } from './types.js'
+import { promises as fs } from 'fs'
 
 export const drive: Drive = {
     list: (path) => {
-        const result = resolve(process.cwd(), path)
-
-        return list(result)
+        return fs.readdir(path)
     },
     read: (path) => {
-        const result = resolve(process.cwd(), path)
-
-        return read(result)
+        return fs.readFile(path, 'utf-8')
+    },
+    write: (path, content) => {
+        return fs.writeFile(path, content, 'utf-8')
     },
 }
