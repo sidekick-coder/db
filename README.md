@@ -10,10 +10,8 @@ A simple cli to manage your data
 ## Roadmap
 
 - [x] markdown provider
-- [x] programatic usage
-- [x] provider filepath as a variable Ex: `db list --provider=custom-provider.js"`
-- [ ] folder provider
-- [ ] json provider
+- [x] folder provider
+- [x] json provider
 - [ ] yaml provider
 - [ ] sql provider
 - [ ] csv provider

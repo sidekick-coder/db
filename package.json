@@ -22,6 +22,16 @@
             "types": "./dist/providers/markdown/index.d.ts",
             "import": "./dist/providers/markdown/index.js",
             "require": "./dist/providers/markdown/index.cjs"
+        },
+        "./providers/json": {
+            "types": "./dist/providers/json/index.d.ts",
+            "import": "./dist/providers/json/index.js",
+            "require": "./dist/providers/json/index.cjs"
+        },
+        "./providers/folder": {
+            "types": "./dist/providers/folder/index.d.ts",
+            "import": "./dist/providers/folder/index.js",
+            "require": "./dist/providers/folder/index.cjs"
         }
     },
     "scripts": {
