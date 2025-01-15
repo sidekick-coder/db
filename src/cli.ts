@@ -1,4 +1,4 @@
-#! /usr/bin/env node
+#! /usr/bin/env node --trace-warnings
 import { readConfig } from '@/utils/filesystem.js'
 import minimist from 'minimist'
 import { resolve } from 'path'
@@ -28,7 +28,7 @@ async function run() {
         files.unshift(resolve(process.cwd(), flags['db-config']))
     }
 
-    const homeConfig = readConfig([resolve(process.env.HOME, '.config', 'db', 'config.yml')])
+    const homeConfig = readConfig([resolve(process.env.HOME!, '.config', 'db', 'config.yml')])
     const localConfig = readConfig(files) || {}
 
     const raw = merge({}, homeConfig, localConfig)
