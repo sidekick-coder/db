@@ -19,7 +19,6 @@ A simple cli to manage your data
 - [ ] csv provider
 
 - [ ] aggregation command (sum, avg, group by, etc)
-- [ ] pagination
 
 ## Installation
 
@@ -58,6 +57,7 @@ This is a file to make it easier to manage multiple data sources and not have to
 
 The files are searched in the following order:
 
+- `$HOME/.config/db/config.yml`
 - `$PWD/db.config.yml`
 - `$PWD/.db.config.yaml`
 - `$PWD/.db.config.json`
@@ -87,6 +87,16 @@ databases:
         user: user
         password: password
         database: my_db
+
+    - name: my_custom_provider_1
+      provider: ./my-custom-provider.js
+
+    - name: my_custom_provider_2 
+      provider: custom
+
+providers:
+    - name:  custom
+      path: ./my-custom-provider.js
 ```
 
 Select the databse with the `--database` flag
@@ -101,7 +111,7 @@ db list -d my_notes
 
 ## List
 
-List items in the database 
+List items in the database
 
 ### Options
 
@@ -180,7 +190,7 @@ Update an item in the database
 | data | `object` | `true` | Data to be updated |
 | where | `object` | `false` | Where statments to filter data |
 
-> [!WARNING] if where is not provided, all items will be updated 
+> [!WARNING] if where is not provided, all items will be updated
 
 ### Examples
 
@@ -196,30 +206,31 @@ db update --data "@update-task.yml" --where "id=01"
 db update --data '{"status": "done"}' --where "id=01"
 ```
 
-## Destroy 
+## Destroy
 
-Delete an item in the database 
+Delete an item in the database
 
-### Options 
-| Option | Type | Required | Description | 
-| --- | --- | --- | --- | 
-| provider | `string` | if not usign config file | Provider name | 
-| config | `object` | if not usign config file | Provider configuration | 
+### Options
+
+| Option | Type | Required | Description |
+| --- | --- | --- | --- |
+| provider | `string` | if not usign config file | Provider name |
+| config | `object` | if not usign config file | Provider configuration |
 | where | `object` | `false` | Where statments to filter data |
 
 > [!WARNING] if where is not provided, all items will be deleted
 
 ### Examples
 
-```bash 
+```bash
 db destroy --where "id=01"
 ```
 
-```bash 
+```bash
 db destroy --where "@delete-task.yml"
 ```
 
-```bash 
+```bash
 db destroy --where '{"id": "01"}'
 ```
 
@@ -245,10 +256,10 @@ Accepted formats are `yml`, `yaml`, `json`
 db list --where "@query.yml" 
 ```
 
-### json 
+### json
 
 You can pass a json string directly
 
-```bash 
+```bash
 db list --where '{"path": "data"}'
 ```
