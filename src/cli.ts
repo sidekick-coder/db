@@ -11,8 +11,6 @@ import { confirm } from '@inquirer/prompts'
 import { vWithExtras as v } from '@/core/validator/index.js'
 
 async function run() {
-    // const commands = await listCommands()
-
     const { _: allArgs, ...flags } = minimist(process.argv.slice(2))
 
     const [name] = allArgs
@@ -39,12 +37,37 @@ async function run() {
 
     const options = { ...flags } as any
 
+    // handle vars flags
     const varsFlags = ['config', 'where', 'data']
 
     for (const key of varsFlags) {
         if (options[key]) {
             options[key] = v.parse(v.extras.vars, options[key])
         }
+    }
+
+    // handle provider paths
+    const isProviderPath = (path?: string) => path?.startsWith('/') || path?.startsWith('.')
+
+    if (isProviderPath(options.provider)) {
+        const path = resolve(process.cwd(), options.provider)
+        const mount = await import(path)
+
+        db.addProvider(options.provider, mount.default)
+    }
+
+    for await (const item of raw?.databases || []) {
+        if (isProviderPath(item.provider)) {
+            const path = resolve(process.cwd(), item.provider)
+            const mount = await import(path)
+
+            db.addProvider(item.provider, mount.default)
+        }
+    }
+
+    // handle selected database
+    if (options.database || options.d) {
+        db.select(options.database || options.d)
     }
 
     if (name == 'list') {

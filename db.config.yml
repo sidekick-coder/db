@@ -5,3 +5,8 @@ databases:
     provider: markdown
     config:
       path: ./playground/markdown/data
+
+  - name: custom 
+    provider: ./playground/custom/index.js
+    config:
+        test: 123

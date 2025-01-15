@@ -10,7 +10,8 @@ A simple cli to manage your data
 ## Roadmap
 
 - [x] markdown provider
-- [ ] programatic usage
+- [x] programatic usage
+- [ ] provider filepath as a variable Ex: `db list --provider=custom-provider.js"`
 - [ ] folder provider
 - [ ] json provider
 - [ ] yaml provider
@@ -19,7 +20,6 @@ A simple cli to manage your data
 
 - [ ] aggregation command (sum, avg, group by, etc)
 - [ ] pagination
-- [ ] extendable providers
 
 ## Installation
 

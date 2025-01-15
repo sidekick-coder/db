@@ -6,66 +6,71 @@ import { update as baseUpdate, type UpdateOptions } from './update.js'
 import { destroy as baseDestroy, type DestroyOptions } from './destroy.js'
 
 export function createDb(config: DbConfig) {
+    const providerList = new Map(Object.entries(config.providers))
     const dbConfig = v.parse(dbConfigSchema, config)
     const defaultDatabase = dbConfig.databases.find((db) => db.name === dbConfig.default_database)
 
-    function list(payload?: Omit<ListOptions, 'dbConfig'>) {
-        const options = { ...payload } as any
+    const current = {
+        name: defaultDatabase?.name,
+        provider: defaultDatabase?.provider,
+        config: defaultDatabase?.config,
+    }
 
-        if (!options.provider && defaultDatabase) {
-            options.provider = defaultDatabase.provider
-            options.config = defaultDatabase.config
+    function addProvider(name: string, provider: any) {
+        providerList.set(name, provider)
+    }
+
+    function select(name: string) {
+        const db = dbConfig.databases.find((db) => db.name === name)
+
+        if (!db) {
+            throw new Error(`Database "${name}" not found`)
         }
 
-        return baseList({
-            ...options,
+        current.name = db.name
+        current.provider = db.provider
+        current.config = db.config
+    }
+
+    function baseOptions(payload: any) {
+        return {
+            name: current.name,
+            provider: current.provider,
+            config: current.config,
+            providerList,
             dbConfig,
-        })
+            ...payload,
+        }
+    }
+
+    function list(payload?: Omit<ListOptions, 'dbConfig'>) {
+        const options = baseOptions(payload)
+
+        return baseList(options)
     }
 
     function create(payload: Omit<CreateOptions, 'dbConfig'>) {
-        const options = { ...payload } as any
+        const options = baseOptions(payload)
 
-        if (!options.provider && defaultDatabase) {
-            options.provider = defaultDatabase.provider
-            options.config = defaultDatabase.config
-        }
-
-        return baseCreate({
-            ...options,
-            dbConfig,
-        })
+        return baseCreate(options)
     }
 
     function update(payload: Omit<UpdateOptions, 'dbConfig'>) {
-        const options = { ...payload } as any
+        const options = baseOptions(payload)
 
-        if (!options.provider && defaultDatabase) {
-            options.provider = defaultDatabase.provider
-            options.config = defaultDatabase.config
-        }
-
-        return baseUpdate({
-            ...options,
-            dbConfig,
-        })
+        return baseUpdate(options)
     }
 
     function destroy(payload: Omit<DestroyOptions, 'dbConfig'>) {
-        const options = { ...payload } as any
+        const options = baseOptions(payload)
 
-        if (!options.provider && defaultDatabase) {
-            options.provider = defaultDatabase.provider
-            options.config = defaultDatabase.config
-        }
-
-        return baseDestroy({
-            ...options,
-            dbConfig,
-        })
+        return baseDestroy(options)
     }
 
     return {
+        addProvider,
+        select,
+
         list,
         create,
         update,

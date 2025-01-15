@@ -7,8 +7,6 @@ export const dbSchema = v.object({
     config: v.record(v.string(), v.any()),
 })
 
-const provider = v.pipe(v.function(), v.args(v.tuple([v.string(), v.any()])), v.returns(v.any()))
-
 export interface DbConfig extends InferOutput<typeof dbConfigSchema> {}
 
 export const dbConfigSchema = v.object({
@@ -20,3 +18,10 @@ export const dbConfigSchema = v.object({
         v.array(dbSchema)
     ),
 })
+
+export const common = {
+    dbConfig: dbConfigSchema,
+    providerList: v.map(v.string(), v.any()),
+    provider: v.string(),
+    config: v.optional(v.record(v.string(), v.any())),
+}
