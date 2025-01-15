@@ -9,6 +9,7 @@ import { print } from './utils/print.js'
 import { confirm } from '@inquirer/prompts'
 
 import { vWithExtras as v } from '@/core/validator/index.js'
+import { merge } from 'lodash-es'
 
 async function run() {
     const { _: allArgs, ...flags } = minimist(process.argv.slice(2))
@@ -25,7 +26,22 @@ async function run() {
         files.unshift(resolve(process.cwd(), flags['db-config']))
     }
 
-    const raw = readConfig(files) || {}
+    const homeConfig = readConfig([resolve(process.env.HOME, '.config', 'db', 'config.yml')])
+    const localConfig = readConfig(files) || {}
+
+    const raw = merge({}, homeConfig, localConfig)
+
+    const providers = {
+        markdown: createMarkdownProvider(drive),
+    }
+
+    if (homeConfig.providers) {
+        for (const p of homeConfig.providers) {
+            const mount = await import(resolve(process.cwd(), p.path))
+
+            providers[p.name] = mount.default
+        }
+    }
 
     const db = createDb({
         ...raw,
@@ -48,6 +64,13 @@ async function run() {
 
     // handle provider paths
     const isProviderPath = (path?: string) => path?.startsWith('/') || path?.startsWith('.')
+    const allProviders = [...(homeConfig?.providers || []), ...(localConfig?.providers || [])]
+
+    for (const p of allProviders) {
+        const mount = await import(resolve(process.cwd(), p.path))
+
+        db.addProvider(p.name, mount.default)
+    }
 
     if (isProviderPath(options.provider)) {
         const path = resolve(process.cwd(), options.provider)

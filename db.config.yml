@@ -7,6 +7,6 @@ databases:
       path: ./playground/markdown/data
 
   - name: custom 
-    provider: ./playground/custom/index.js
+    provider: customRoot1
     config:
         test: 123

@@ -11,7 +11,7 @@ A simple cli to manage your data
 
 - [x] markdown provider
 - [x] programatic usage
-- [ ] provider filepath as a variable Ex: `db list --provider=custom-provider.js"`
+- [x] provider filepath as a variable Ex: `db list --provider=custom-provider.js"`
 - [ ] folder provider
 - [ ] json provider
 - [ ] yaml provider
