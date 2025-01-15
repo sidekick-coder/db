@@ -1,12 +1,23 @@
 default_database: markdown
 
 databases:
-  - name: markdown 
-    provider: markdown
-    config:
-      path: ./playground/markdown/data
+    - name: markdown
+      provider: markdown
+      config:
+          path: ./playground/markdown/data
 
-  - name: custom 
-    provider: customRoot1
-    config:
-        test: 123
+    - name: custom
+      provider: customRoot1
+      config:
+          test: 123
+
+    - name: folder
+      provider: folder
+      config:
+          path: ./playground/folder/data
+
+    - name: folder-json
+      provider: folder
+      config:
+          path: ./playground/folder-json/data
+          format: json

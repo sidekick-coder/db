@@ -10,6 +10,7 @@ import { confirm } from '@inquirer/prompts'
 
 import { vWithExtras as v } from '@/core/validator/index.js'
 import { merge } from 'lodash-es'
+import { createFolderProvider } from './providers/folder/index.js'
 
 async function run() {
     const { _: allArgs, ...flags } = minimist(process.argv.slice(2))
@@ -48,6 +49,7 @@ async function run() {
         databases: raw.databases || [],
         providers: {
             markdown: createMarkdownProvider(drive),
+            folder: createFolderProvider(drive),
         },
     })
 
