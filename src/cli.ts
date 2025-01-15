@@ -11,6 +11,7 @@ import { confirm } from '@inquirer/prompts'
 import { vWithExtras as v } from '@/core/validator/index.js'
 import { merge } from 'lodash-es'
 import { createFolderProvider } from './providers/folder/index.js'
+import { createJsonProvider } from './providers/json/provider.js'
 
 async function run() {
     const { _: allArgs, ...flags } = minimist(process.argv.slice(2))
@@ -50,6 +51,7 @@ async function run() {
         providers: {
             markdown: createMarkdownProvider(drive),
             folder: createFolderProvider(drive),
+            json: createJsonProvider(drive),
         },
     })
 

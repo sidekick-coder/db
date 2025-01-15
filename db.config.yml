@@ -6,6 +6,11 @@ databases:
       config:
           path: ./playground/markdown/data
 
+    - name: json 
+      provider: json
+      config:
+          path: ./playground/json/data
+
     - name: custom
       provider: customRoot1
       config:
