@@ -51,5 +51,6 @@ function parseWhere(whereClause: Where) {
 export function queryArray(data: any[], where: Where) {
     const siftQuery = parseWhere(where)
 
+    // @ts-ignore
     return data.filter(sift(siftQuery))
 }

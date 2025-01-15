@@ -2,7 +2,7 @@
 	"compilerOptions": {
         "strict": true,
 		"moduleDetection": "force",
-		"module": "es2022",
+		"module": "nodenext",
         "moduleResolution": "nodenext",
 		"resolveJsonModule": true,
 		"allowJs": true,

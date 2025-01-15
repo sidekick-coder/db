@@ -10,6 +10,7 @@ A simple cli to manage your data
 ## Roadmap
 
 - [x] markdown provider
+- [ ] programatic usage
 - [ ] folder provider
 - [ ] json provider
 - [ ] yaml provider

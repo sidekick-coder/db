@@ -10,6 +10,6 @@ const unregister = register({
     tsconfig: resolve(__dirname, '../tsconfig.json'),
 })
 
-import(resolve(__dirname, '../src/bin/db.ts'))
+import(resolve(__dirname, '../src/cli.ts'))
 
 process.on('exit', unregister)
