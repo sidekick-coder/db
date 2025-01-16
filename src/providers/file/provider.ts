@@ -6,76 +6,60 @@ import { queryArray } from '@/core/provider/queryArray.js'
 
 import omit from 'lodash-es/omit.js'
 import pick from 'lodash-es/pick.js'
-import { MD } from '@/core/parsers/index.js'
-import { createIdMaker } from '@/core/id/index.js'
 import { createIncrementalStategyFromFile } from '@/core/id/incremental.js'
+import { createIdMaker } from '@/core/id/index.js'
 
-interface Config {
-    path: string
-    format?: 'markdown' | 'json'
-    exclude?: string[]
-    id?: {
-        strategy?: string
-    }
-}
-
-interface Parser {
+interface ProviderConfig {
+    drive: Drive
     ext: string
     parse: (data: string) => any
     stringify: (data: any) => string
 }
 
-const parsers: Record<string, Parser> = {
-    json: {
-        ext: 'json',
-        parse: JSON.parse,
-        stringify: (contents) => JSON.stringify(contents, null, 4),
-    },
-    markdown: {
-        ext: 'md',
-        parse: MD.parse,
-        stringify: (contents) => MD.stringify(contents),
-    },
+interface Config {
+    path: string
+    id?: {
+        strategy?: string
+        [key: string]: any
+    }
 }
 
-export function createFolderProvider(drive: Drive) {
+export function createFileProvider(providerConfig: ProviderConfig) {
     return defineProvider((config: Config) => {
+        const { drive, ext, parse, stringify } = providerConfig
         const { path } = config
 
         const idConfig = config.id || {}
         const { strategy: idStrategy, ...idOptions } = idConfig
 
-        const parser = parsers[config.format || 'markdown']
-
         const makeId = createIdMaker({
-            strategies: [createIncrementalStategyFromFile(drive, resolve(path, 'last_id.json'))],
+            strategies: [
+                createIncrementalStategyFromFile(drive, resolve(path, '.db', 'last_id.json')),
+            ],
         })
 
         const list: DataProvider['list'] = async (options) => {
             const where = options?.where || {}
-            const exclude = options?.exclude || ['_raw', '_filename', '_folder', '_body']
+            const exclude = options?.exclude || []
             const include = options?.include || []
             const limit = options?.pagination?.limit
             const page = options?.pagination?.page || 1
 
-            let files = await drive.list(path, { onlyDirs: true })
-
-            if (config.exclude) {
-                files = files.filter((file) => !config.exclude?.includes(file))
-            }
-
+            const files = await drive.list(path)
             const result = [] as any[]
 
             for (const file of files) {
-                const raw = await drive.read(resolve(path, file, `index.${parser.ext}`))
+                const filename = resolve(path, file)
 
-                const item = {
-                    _id: file.replace(`.${parser.ext}`, ''),
-                    _folder: resolve(path, file),
-                    _raw: raw,
+                const content = await drive.read(filename)
+
+                const item: any = {
+                    _id: file.replace(`.${ext}`, ''),
+                    _filename: filename,
+                    _raw: content,
                 }
 
-                Object.assign(item, parser.parse(raw))
+                Object.assign(item, parse(content))
 
                 result.push(item)
             }
@@ -88,6 +72,13 @@ export function createFolderProvider(drive: Drive) {
 
             if (exclude.length && !include.length) {
                 items = items.map((item) => omit(item, exclude))
+            }
+
+            // exclude properties with underscore
+            if (items.length && !include.length && !exclude.length) {
+                const keys = Object.keys(items[0]).filter((k) => k !== '_id' && k.startsWith('_'))
+
+                items = items.map((item) => omit(item, keys))
             }
 
             if (limit) {
@@ -112,8 +103,8 @@ export function createFolderProvider(drive: Drive) {
         const find: DataProvider['find'] = async (where, field) => {
             const { data: items } = await list({
                 where,
-                exclude: field?.exclude,
                 include: field?.include,
+                exclude: field?.exclude,
                 pagination: { limit: 1 },
             })
 
@@ -121,40 +112,46 @@ export function createFolderProvider(drive: Drive) {
         }
 
         const create: DataProvider['create'] = async (data) => {
-            const id = data.id || (await makeId(idStrategy, idOptions))
+            const { id: explicitId, ...properties } = data
+            const id = explicitId || (await makeId(idStrategy, idOptions))
+            const filename = resolve(path, `${id}.${ext}`)
 
-            if (await drive.exists(resolve(path, id))) {
+            if (await drive.exists(filename)) {
                 throw new Error(`Item with id "${id}" already exists`)
             }
 
-            const filename = resolve(path, id, `index.${parser.ext}`)
+            const content = stringify(properties)
 
-            await drive.mkdir(resolve(path, id))
+            await drive.write(filename, content)
 
-            await drive.write(filename, parser.stringify(data))
-
-            const item = await find({ _id: String(id) })
+            const item = await find({ _id: String(id) })!
 
             return item!
         }
 
         const update: DataProvider['update'] = async (data, where) => {
-            const { data: items } = await list({ where })
+            const { data: items } = await list({ where, exclude: [] })
 
             for (const item of items) {
-                const filename = resolve(path, item._id, `index.${parser.ext}`)
+                const filename = resolve(path, `${item.id}.${ext}`)
 
-                await drive.write(filename, parser.stringify(data))
+                const hideKeys = Object.keys(item).filter((k) => k.startsWith('_'))
+
+                const properties = omit({ ...item, ...data }, hideKeys)
+
+                const content = stringify(properties)
+
+                await drive.write(filename, content)
             }
 
             return { count: items.length }
         }
 
         const destroy: DataProvider['destroy'] = async (where) => {
-            const { data: items } = await list({ where, include: ['_folder'] })
+            const { data: items } = await list({ where, include: ['_filename'] })
 
             for (const item of items) {
-                await drive.destroy(item._folder)
+                await drive.destroy(item._filename)
             }
 
             return { count: items.length }

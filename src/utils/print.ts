@@ -52,7 +52,7 @@ export function print(data: any, output?: 'json' | 'yaml') {
 
         table.head(header)
 
-        table.row(header.map((key) => String(data[key] || '')))
+        table.row(header.map((key) => String(data[key] !== undefined ? data[key] : '')))
 
         table.render()
     }

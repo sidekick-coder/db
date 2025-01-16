@@ -1,9 +1,8 @@
-#! /usr/bin/env node --trace-warnings
+#! /usr/bin/env node
 import { readConfig } from '@/utils/filesystem.js'
 import minimist from 'minimist'
 import { resolve } from 'path'
 import { createDb } from '@/core/api/index.js'
-import { createMarkdownProvider } from './providers/markdown/index.js'
 import { drive } from './core/drive/index.js'
 import { print } from './utils/print.js'
 import { confirm } from '@inquirer/prompts'
@@ -11,7 +10,7 @@ import { confirm } from '@inquirer/prompts'
 import { vWithExtras as v } from '@/core/validator/index.js'
 import { merge } from 'lodash-es'
 import { createFolderProvider } from './providers/folder/index.js'
-import { createJsonProvider } from './providers/json/provider.js'
+import { createJsonProvider, createMarkdownProvider } from './providers/file/index.js'
 
 async function run() {
     const { _: allArgs, ...flags } = minimist(process.argv.slice(2))
@@ -58,7 +57,7 @@ async function run() {
     const options = { ...flags } as any
 
     // handle vars flags
-    const varsFlags = ['config', 'where', 'data']
+    const varsFlags = ['config', 'where', 'data', 'pagination', 'sort', 'field']
 
     for (const key of varsFlags) {
         if (options[key]) {

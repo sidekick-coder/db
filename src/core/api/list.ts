@@ -1,6 +1,6 @@
 import { vWithExtras as v } from '@/core/validator/index.js'
 import { InferOutput } from 'valibot'
-import { common, dbConfigSchema } from './schemas.js'
+import { common } from './schemas.js'
 
 export interface ListOptions extends InferOutput<typeof schema> {}
 
@@ -8,8 +8,12 @@ const schema = v.object({
     ...common,
     where: v.optional(v.record(v.string(), v.any())),
     pagination: v.optional(v.record(v.string(), v.any())),
-    include: v.optional(v.array(v.string())),
-    exclude: v.optional(v.array(v.string())),
+    field: v.optional(
+        v.object({
+            exclude: v.optional(v.array(v.string())),
+            include: v.optional(v.array(v.string())),
+        })
+    ),
 })
 
 export async function list(payload: ListOptions) {
@@ -19,8 +23,8 @@ export async function list(payload: ListOptions) {
     const config = options.config
 
     const where = options.where || {}
-    const include = options.include
-    const exclude = options.exclude
+    const include = options.field?.include
+    const exclude = options.field?.exclude
     const pagination = options.pagination
 
     const mount = options.providerList.get(providerName)

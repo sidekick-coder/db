@@ -39,6 +39,14 @@ const vars = v.optional(
                 return qs.parse(value) as Record<string, any>
             }
 
+            if (typeof value == 'string' && value.startsWith('{')) {
+                return JSON.parse(value)
+            }
+
+            if (typeof value == 'string' && value.startsWith('[')) {
+                return JSON.parse(value)
+            }
+
             return value
         }),
         v.record(v.string(), v.any())

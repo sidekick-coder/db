@@ -6,7 +6,7 @@ databases:
       config:
           path: ./playground/markdown/data
 
-    - name: json 
+    - name: json
       provider: json
       config:
           path: ./playground/json/data
@@ -20,6 +20,9 @@ databases:
       provider: folder
       config:
           path: ./playground/folder/data
+          id:
+              strategy: date
+              pattern: yyyy-MM-dd HH-mm-ss
 
     - name: folder-json
       provider: folder
