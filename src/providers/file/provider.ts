@@ -40,8 +40,8 @@ export function createFileProvider(providerConfig: ProviderConfig) {
 
         const list: DataProvider['list'] = async (options) => {
             const where = options?.where || {}
-            const exclude = options?.exclude || []
-            const include = options?.include || []
+            const exclude = options?.exclude
+            const include = options?.include
             const limit = options?.pagination?.limit
             const page = options?.pagination?.page || 1
 
@@ -66,16 +66,16 @@ export function createFileProvider(providerConfig: ProviderConfig) {
 
             let items = queryArray(result, where)
 
-            if (include.length) {
+            if (include?.length) {
                 items = items.map((item) => pick(item, include))
             }
 
-            if (exclude.length && !include.length) {
+            if (exclude?.length && !include?.length) {
                 items = items.map((item) => omit(item, exclude))
             }
 
             // exclude properties with underscore
-            if (items.length && !include.length && !exclude.length) {
+            if (items.length && !include && !exclude) {
                 const keys = Object.keys(items[0]).filter((k) => k !== '_id' && k.startsWith('_'))
 
                 items = items.map((item) => omit(item, keys))

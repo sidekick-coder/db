@@ -11,10 +11,16 @@ databases:
       config:
           path: ./playground/json/data
 
-    - name: custom
-      provider: customRoot1
+    - name: yaml 
+      provider: yaml
       config:
-          test: 123
+          path: ./playground/yaml/data
+
+    - name: yml 
+      provider: yml
+      config: 
+          path: ./playground/yml/data
+          
 
     - name: folder
       provider: folder
@@ -29,3 +35,16 @@ databases:
       config:
           path: ./playground/folder-json/data
           format: json
+
+    - name: folder-yaml 
+      provider: folder
+      config: 
+          path: ./playground/folder-yaml/data 
+          format: yaml 
+
+    - name: folder-yml 
+      provider: folder
+      config:
+          path: ./playground/folder-yml/data 
+          format: yml
+

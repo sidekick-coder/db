@@ -36,7 +36,11 @@ const vars = v.optional(
             }
 
             if (typeof value == 'string' && value.includes('=')) {
-                return qs.parse(value) as Record<string, any>
+                const result = qs.parse(value, { allowEmptyArrays: true })
+
+                console.log('result', result)
+
+                return result as Record<string, any>
             }
 
             if (typeof value == 'string' && value.startsWith('{')) {

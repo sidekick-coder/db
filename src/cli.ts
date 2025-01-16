@@ -11,6 +11,7 @@ import { vWithExtras as v } from '@/core/validator/index.js'
 import { merge } from 'lodash-es'
 import { createFolderProvider } from './providers/folder/index.js'
 import { createJsonProvider, createMarkdownProvider } from './providers/file/index.js'
+import { createYamlProvider } from './providers/file/yaml.js'
 
 async function run() {
     const { _: allArgs, ...flags } = minimist(process.argv.slice(2))
@@ -51,6 +52,8 @@ async function run() {
             markdown: createMarkdownProvider(drive),
             folder: createFolderProvider(drive),
             json: createJsonProvider(drive),
+            yaml: createYamlProvider({ drive, ext: 'yaml' }),
+            yml: createYamlProvider({ drive, ext: 'yml' }),
         },
     })
 

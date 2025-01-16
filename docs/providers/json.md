@@ -6,7 +6,8 @@ This provider is a folder with a list of `.json` files
 
 | name | Type | Description |
 | --- | --- | --- |
-| path | string | Folder where to keep json files, is an absolute path or relative to the `db.config.yml`  file
+| path | `string` | Absolute path to folder, or relative to the `db.config.yml`  file
+| id | [IDStrategy](../id-strategy.md) | Id strategy to generate ids for the items in the database
 
 ### Cli
 

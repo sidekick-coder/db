@@ -1,6 +1,6 @@
-# Markdown provider
+# Yaml provider
 
-This provider is a folder with a list of `.md` files
+This provider is a folder with a list of `.yaml` files
 
 ## Options
 
@@ -12,7 +12,11 @@ This provider is a folder with a list of `.md` files
 ### Cli
 
 ```bash
-db list --provider markdown --config "path=./data"
+db list --provider yaml --config "path=./data"
+
+# or 
+
+db list --provider yml --config "path=./data"
 ```
 
 ### Config
@@ -20,7 +24,7 @@ db list --provider markdown --config "path=./data"
 ```yaml
 databases:
     - name: mydb 
-      provider: markdown 
+      provider: yaml # or yml
       config:
           path: ./data
 ```
@@ -29,18 +33,19 @@ databases:
 
 ```ts
 import { createDb } from '@sidekick-coder/db/api';
-import { createMarkdownProvider } from '@sidekick-coder/db/providers/markdown';
+import { createJsonProvider } from '@sidekick-coder/db/providers/yaml';
 import { drive } from '@sidekick-coder/db/drive';
 import { resolve } from 'path'
 
 const db = createDb({
     providers: {
-        markdown: createMarkdownProvider(drive),
+        yaml: createJsonProvider({ drive, ext: 'yaml' }),
+        yml: createJsonProvider({ drive, ext: 'yml' }),
     },
 })
 
 const response = await db.list({
-    provider: 'markdown',
+    provider: 'yaml',
     config: {
         path: resolve(process.cwd(), 'data')
      }

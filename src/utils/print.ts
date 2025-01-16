@@ -1,6 +1,26 @@
 import * as YAML from './yaml.js'
 import { cliui } from '@poppinss/cliui'
 
+function parse(value: any) {
+    if (typeof value === 'string' || typeof value === 'number') {
+        return String(value)
+    }
+
+    if (value === undefined) {
+        return ''
+    }
+
+    if (Array.isArray(value)) {
+        return JSON.stringify(value)
+    }
+
+    if (typeof value === 'object') {
+        return JSON.stringify(value)
+    }
+
+    return value
+}
+
 export function print(data: any, output?: 'json' | 'yaml') {
     if (output === 'json') {
         console.log(JSON.stringify(data))
@@ -28,7 +48,7 @@ export function print(data: any, output?: 'json' | 'yaml') {
             const row = [] as string[]
 
             header.forEach((key) => {
-                row.push(String(item[key] || ''))
+                row.push(parse(item[key]))
             })
 
             rows.push(row)
@@ -52,7 +72,7 @@ export function print(data: any, output?: 'json' | 'yaml') {
 
         table.head(header)
 
-        table.row(header.map((key) => String(data[key] !== undefined ? data[key] : '')))
+        table.row(header.map((key) => parse(data[key])))
 
         table.render()
     }

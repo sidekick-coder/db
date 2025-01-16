@@ -9,7 +9,8 @@ And normaly the properties of the item are saved in a `index.(md|json)`
 | name | Type | Description |
 | --- | --- | --- |
 | path | `string` | Folder path, an absolute path or relative to the `db.config.yml` file
-| format | `markdown \| json` | Format to save `index` file default markdown
+| format | `markdown \| json \| yaml \| yml` | Format to save `index` file
+| id | [IDStrategy](../id-strategy.md) | Id strategy to generate ids for the items in the database
 
 ### Cli
 

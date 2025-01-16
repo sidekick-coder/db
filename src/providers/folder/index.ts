@@ -6,7 +6,7 @@ import { queryArray } from '@/core/provider/queryArray.js'
 
 import omit from 'lodash-es/omit.js'
 import pick from 'lodash-es/pick.js'
-import { MD } from '@/core/parsers/index.js'
+import { MD, YAML } from '@/core/parsers/index.js'
 import { createIdMaker } from '@/core/id/index.js'
 import { createIncrementalStategyFromFile } from '@/core/id/incremental.js'
 
@@ -36,6 +36,16 @@ const parsers: Record<string, Parser> = {
         parse: MD.parse,
         stringify: (contents) => MD.stringify(contents),
     },
+    yaml: {
+        ext: 'yaml',
+        parse: YAML.parse,
+        stringify: (contents) => YAML.stringify(contents, null, 4),
+    },
+    yml: {
+        ext: 'yml',
+        parse: YAML.parse,
+        stringify: (contents) => YAML.stringify(contents, null, 4),
+    },
 }
 
 export function createFolderProvider(drive: Drive) {
@@ -46,6 +56,10 @@ export function createFolderProvider(drive: Drive) {
         const { strategy: idStrategy, ...idOptions } = idConfig
 
         const parser = parsers[config.format || 'markdown']
+
+        if (!parser) {
+            throw new Error(`Unknown format: ${config.format}`)
+        }
 
         const makeId = createIdMaker({
             strategies: [createIncrementalStategyFromFile(drive, resolve(path, 'last_id.json'))],
