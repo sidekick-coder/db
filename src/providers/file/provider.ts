@@ -45,10 +45,19 @@ export function createFileProvider(providerConfig: ProviderConfig) {
             const limit = options?.pagination?.limit
             const page = options?.pagination?.page || 1
 
-            const files = await drive.list(path)
+            const files = await drive.list(path, {
+                onlyFiles: true,
+            })
+
+            const filteredFiles = files.filter((f) => {
+                if (f === '.db') return false
+
+                return true
+            })
+
             const result = [] as any[]
 
-            for (const file of files) {
+            for (const file of filteredFiles) {
                 const filename = resolve(path, file)
 
                 const content = await drive.read(filename)

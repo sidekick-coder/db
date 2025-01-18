@@ -2,7 +2,20 @@ import { Drive } from './types.js'
 import { promises as fs } from 'fs'
 
 export const drive: Drive = {
+    exists: async (path) => {
+        try {
+            await fs.stat(path)
+
+            return true
+        } catch (error) {
+            return false
+        }
+    },
     list: async (path, options) => {
+        if (!(await drive.exists(path))) {
+            throw new Error(`entry not found ${path}`)
+        }
+
         const all = await fs.readdir(path, { withFileTypes: true })
 
         if (options?.onlyFiles) {
@@ -15,17 +28,18 @@ export const drive: Drive = {
 
         return all.map((item) => item.name)
     },
-    read: (path) => {
-        return fs.readFile(path, 'utf-8')
-    },
-    exists: async (path) => {
-        try {
-            await fs.stat(path)
-
-            return true
-        } catch (error) {
-            return false
+    read: async (path) => {
+        if (!(await drive.exists(path))) {
+            throw new Error(`entry not found ${path}`)
         }
+
+        const stat = await fs.stat(path)
+
+        if (!stat.isFile()) {
+            throw new Error(`entry not file ${path}`)
+        }
+
+        return fs.readFile(path, 'utf-8')
     },
     write: (path, content) => {
         return fs.writeFile(path, content, 'utf-8')
