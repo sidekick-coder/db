@@ -12,6 +12,7 @@ import { merge } from 'lodash-es'
 import { createFolderProvider } from './providers/folder/index.js'
 import { createJsonProvider, createMarkdownProvider } from './providers/file/index.js'
 import { createYamlProvider } from './providers/file/yaml.js'
+import { createNotionProvider } from './providers/notion/index.js'
 
 async function run() {
     const { _: allArgs, ...flags } = minimist(process.argv.slice(2))
@@ -33,18 +34,6 @@ async function run() {
 
     const raw = merge({}, homeConfig, localConfig)
 
-    const providers = {
-        markdown: createMarkdownProvider(drive),
-    }
-
-    if (homeConfig.providers) {
-        for (const p of homeConfig.providers) {
-            const mount = await import(resolve(process.cwd(), p.path))
-
-            providers[p.name] = mount.default
-        }
-    }
-
     const db = createDb({
         ...raw,
         databases: raw.databases || [],
@@ -54,6 +43,7 @@ async function run() {
             json: createJsonProvider(drive),
             yaml: createYamlProvider({ drive, ext: 'yaml' }),
             yml: createYamlProvider({ drive, ext: 'yml' }),
+            notion: createNotionProvider(),
         },
     })
 
@@ -103,11 +93,17 @@ async function run() {
         const response = await db.list(options)
 
         if (['json', 'yaml'].includes(options.format)) {
-            return print(response, options.format)
+            return print(response, {
+                format: options.format,
+            })
         }
 
         print(response.meta)
-        print(response.data)
+
+        print(response.data, {
+            format: options.format,
+            vertical: !!options['print-vertical'],
+        })
     }
 
     if (name == 'create') {
