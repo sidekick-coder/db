@@ -50,6 +50,17 @@ export function createNotionProvider() {
 
                     continue
                 }
+
+                if (property.type === 'formula') {
+                    and.push({
+                        property: key,
+                        rich_text: {
+                            equals: value,
+                        },
+                    })
+
+                    continue
+                }
             }
 
             return {
@@ -166,6 +177,12 @@ export function createNotionProvider() {
             )
 
             const responseBody = await response.json()
+
+            if (!response.ok) {
+                console.error(body.filter)
+                console.error(responseBody)
+                throw new Error('Notion API error')
+            }
 
             let items = [] as any[]
 

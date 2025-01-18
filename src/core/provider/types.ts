@@ -43,11 +43,11 @@ export interface ListResponse {
 }
 
 export interface DataProvider {
-    list: (options?: ListOptions) => Promise<ListResponse>
-    find: (where?: Where, field?: Field) => Promise<DataItem | null>
-    create: (data: any) => Promise<DataItem>
-    update: (data: any, where?: Where) => Promise<{ count: number }>
-    destroy: (where?: Where) => Promise<{ count: number }>
+    list?: (options?: ListOptions) => Promise<ListResponse>
+    find?: (where?: Where, field?: Field) => Promise<DataItem | null>
+    create?: (data: any) => Promise<DataItem>
+    update?: (data: any, where?: Where) => Promise<{ count: number }>
+    destroy?: (where?: Where) => Promise<{ count: number }>
 }
 
 export interface MountDataProvider {
