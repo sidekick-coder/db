@@ -38,8 +38,6 @@ const vars = v.optional(
             if (typeof value == 'string' && value.includes('=')) {
                 const result = qs.parse(value, { allowEmptyArrays: true })
 
-                console.log('result', result)
-
                 return result as Record<string, any>
             }
 
@@ -59,6 +57,12 @@ const vars = v.optional(
 
 const extras = {
     vars,
+    number: v.pipe(
+        v.any(),
+        v.transform(Number),
+        v.check((n) => !isNaN(n)),
+        v.number()
+    ),
 }
 
 export const vWithExtras = {

@@ -22,7 +22,7 @@ export async function list(payload: ListOptions) {
     const providerName = options.provider
     const config = options.config
 
-    const where = options.where || {}
+    const where = options.where
     const include = options.field?.include
     const exclude = options.field?.exclude
     const pagination = options.pagination
