@@ -187,13 +187,37 @@ export function createNotionProvider() {
             return { count }
         }
 
-        // const destroy: DataProvider['destroy'] = async (where) => {}
+        const destroy: DataProvider['destroy'] = async (where) => {
+            const { data, meta } = await list({ where, exclude: [] })
+
+            let count = 0
+
+            for await (const item of data) {
+                count++
+
+                await api(`pages/${item._id}`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({
+                        archived: true,
+                    }),
+                })
+            }
+
+            if (meta.has_more) {
+                const nextCount = await destroy!(where)
+
+                count += nextCount.count
+            }
+
+            return { count }
+        }
 
         return {
             list,
             find,
             create,
             update,
+            destroy,
         }
     })
 }
