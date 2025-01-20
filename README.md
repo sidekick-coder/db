@@ -118,7 +118,9 @@ List items in the database
 | --- | --- | --- | --- |
 | provider | `string` | if not usign config file | Provider name |
 | config | `object` | if not usign config file | Provider configuration |
-| where | `object` | `false` | Where statments to filter data |
+| where | `object` | `false` | Where statments to filter data [see filters](./docs/filters.md) |
+| include | `array` | `false` | Include properties |
+| exclude | `array` | `false` | Exclude properties |
 
 ### Examples
 
@@ -130,24 +132,28 @@ db list
 db list --where "status=done"
 ```
 
+## Find 
+
+Find a single item in the database
+
+### Options
+
+| Option | Type | Required | Description |
+| --- | --- | --- | --- |
+| provider | `string` | if not usign config file | Provider name |
+| config | `object` | if not usign config file | Provider configuration |
+| where | `object` | `false` | Where statments to filter data [see filters](./docs/filters.md) |
+| include | `array` | `false` | Include properties |
+| exclude | `array` | `false` | Exclude properties |
+
+### Examples
+
 ```bash
-db list --where "status[operator]=in&status[value]" # special operator 
+db find
 ```
 
 ```bash
-db list --where "status=done&author=dio" # and 
-```
-
-```bash
-db list --where "or[0][status]=done&or[1][author]=dio" # or
-```
-
-```bash
-db list --where "@where.yml" # load file
-```
-
-```bash
-db list --where '{"status": "done"}' # json format
+db find --where "status=done"
 ```
 
 ## Create
@@ -187,7 +193,7 @@ Update an item in the database
 | provider | `string` | if not usign config file | Provider name |
 | config | `object` | if not usign config file | Provider configuration |
 | data | `object` | `true` | Data to be updated |
-| where | `object` | `false` | Where statments to filter data |
+| where | `object` | `false` | Where statments to filter data [see filters](./docs/filters.md) |
 
 > [!WARNING] if where is not provided, all items will be updated
 
@@ -215,7 +221,7 @@ Delete an item in the database
 | --- | --- | --- | --- |
 | provider | `string` | if not usign config file | Provider name |
 | config | `object` | if not usign config file | Provider configuration |
-| where | `object` | `false` | Where statments to filter data |
+| where | `object` | `false` | Where statments to filter data [see filters](./docs/filters.md) |
 
 > [!WARNING] if where is not provided, all items will be deleted
 
