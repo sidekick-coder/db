@@ -90,18 +90,23 @@ export function createFileProvider(providerConfig: ProviderConfig) {
                 items = items.map((item) => omit(item, keys))
             }
 
+            const total = items.length
+            let total_pages = 1
+
             if (limit) {
                 const start = (page - 1) * limit
                 const end = start + limit
 
                 items = items.slice(start, end)
+
+                total_pages = Math.ceil(result.length / limit)
             }
 
             const response = {
                 meta: {
-                    total: result.length,
+                    total,
                     limit,
-                    total_pages: limit ? Math.ceil(result.length / limit) : 1,
+                    total_pages,
                 },
                 data: items,
             }

@@ -12,18 +12,19 @@ const operatorMap = {
 }
 
 function parseCondition(condition: WhereCondition) {
-    const key = Object.keys(condition)[0]
-    const value = condition[key]
+    const { field, operator, value } = condition
 
-    if (typeof value === 'object' && 'operator' in value && 'value' in value) {
-        const siftOperator = operatorMap[value.operator]
-        if (!siftOperator) {
-            throw new Error(`Unsupported operator: ${value.operator}`)
-        }
-        return { [key]: { [siftOperator]: value.value } }
+    const siftOperator = operatorMap[operator!]
+
+    if (!siftOperator) {
+        throw new Error(`Unsupported operator: ${value.operator}`)
     }
 
-    return { [key]: value }
+    return {
+        [field]: {
+            [siftOperator]: value,
+        },
+    }
 }
 
 function parseGroup(group: any) {
