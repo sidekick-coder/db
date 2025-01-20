@@ -263,6 +263,15 @@ You can pass a json string directly
 db list --where '{"path": "data"}'
 ```
 
+
+## Output format 
+
+You can change the output format using the `--format` flag
+
+```bash 
+db list --format json # json | yaml format
+```
+
 ## Programatic usage 
 
 You can use this lib as a js module importing with the example bellow 
