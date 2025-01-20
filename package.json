@@ -33,20 +33,20 @@
             "import": "./dist/core/drive/index.js",
             "require": "./dist/core/drive/index.cjs"
         },
-        "./providers/markdown": {
-            "types": "./dist/providers/markdown/index.d.ts",
-            "import": "./dist/providers/markdown/index.js",
-            "require": "./dist/providers/markdown/index.cjs"
-        },
-        "./providers/json": {
-            "types": "./dist/providers/json/index.d.ts",
-            "import": "./dist/providers/json/index.js",
-            "require": "./dist/providers/json/index.cjs"
+        "./providers/file": {
+            "types": "./dist/providers/file/index.d.ts",
+            "import": "./dist/providers/file/index.js",
+            "require": "./dist/providers/file/index.cjs"
         },
         "./providers/folder": {
             "types": "./dist/providers/folder/index.d.ts",
             "import": "./dist/providers/folder/index.js",
             "require": "./dist/providers/folder/index.cjs"
+        },
+        "./providers/notion": {
+            "types": "./dist/providers/notion/index.d.ts",
+            "import": "./dist/providers/notion/index.js",
+            "require": "./dist/providers/notion/index.cjs"
         }
     },
     "scripts": {

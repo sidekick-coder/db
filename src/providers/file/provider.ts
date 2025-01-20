@@ -109,11 +109,9 @@ export function createFileProvider(providerConfig: ProviderConfig) {
             return response
         }
 
-        const find: DataProvider['find'] = async (where, field) => {
+        const find: DataProvider['find'] = async (options) => {
             const { data: items } = await list({
-                where,
-                include: field?.include,
-                exclude: field?.exclude,
+                ...options,
                 pagination: { limit: 1 },
             })
 
@@ -133,7 +131,7 @@ export function createFileProvider(providerConfig: ProviderConfig) {
 
             await drive.write(filename, content)
 
-            const item = await find({ _id: String(id) })!
+            const item = await find({ where: { _id: String(id) } })!
 
             return item!
         }

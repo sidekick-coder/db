@@ -123,11 +123,9 @@ export function createFolderProvider(drive: Drive) {
             return response
         }
 
-        const find: DataProvider['find'] = async (where, field) => {
+        const find: DataProvider['find'] = async (options) => {
             const { data: items } = await list({
-                where,
-                exclude: field?.exclude,
-                include: field?.include,
+                ...options,
                 pagination: { limit: 1 },
             })
 
@@ -147,7 +145,7 @@ export function createFolderProvider(drive: Drive) {
 
             await drive.write(filename, parser.stringify(data))
 
-            const item = await find({ _id: String(id) })
+            const item = await find({ where: { _id: String(id) } })
 
             return item!
         }
