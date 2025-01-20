@@ -1,5 +1,5 @@
-import { DataItem } from '@/core/provider/types.js'
-import { has, get } from 'lodash-es'
+import { DataItem, Where, WhereCondition } from '@/core/provider/types.js'
+import { has, get, merge } from 'lodash-es'
 
 function getOne(value: any, keys: string[]) {
     for (const key of keys) {
@@ -166,6 +166,99 @@ export function toNotionObject(itemData: DataItem, properties: any) {
             }
             continue
         }
+    }
+
+    return result
+}
+
+function whereConditionToNotionFilter(condition: WhereCondition, properties: any) {
+    const property = properties[condition.field]
+    const operatorMap = {
+        eq: 'equals',
+        ne: 'does_not_equal',
+        gt: 'greater_than',
+        gte: 'greater_than_or_equal_to',
+        lt: 'less_than',
+        lte: 'less_than_or_equal_to',
+        in: 'contains',
+        nin: 'does_not_contain',
+        like: 'contains',
+        nlike: 'does_not_contain',
+    }
+
+    const and = [] as any[]
+    const or = [] as any[]
+
+    if (condition.operator === 'in') {
+        condition.value.forEach((v: any) => {
+            or.push({
+                property: condition.field,
+                [property.type]: {
+                    equals: v,
+                },
+            })
+        })
+
+        return { or }
+    }
+
+    const operator = operatorMap[condition.operator!]
+
+    and.push({
+        property: condition.field,
+        [property.type]: {
+            [operator]: condition.value,
+        },
+    })
+
+    return { and }
+}
+
+export function toNotionFilter(where: Where, properties: any) {
+    const and = [] as any[]
+    const or = [] as any[]
+
+    const operatorMap = {
+        eq: 'equals',
+        ne: 'does_not_equal',
+        gt: 'greater_than',
+        gte: 'greater_than_or_equal_to',
+        lt: 'less_than',
+        lte: 'less_than_or_equal_to',
+        in: 'contains',
+        nin: 'does_not_contain',
+        like: 'contains',
+        nlike: 'does_not_contain',
+    }
+
+    const andConditions = where.and || []
+
+    for (const condition of andConditions) {
+        const filter = whereConditionToNotionFilter(condition, properties)
+
+        and.push(filter)
+    }
+
+    const orConditions = where.or || []
+
+    for (const condition of orConditions) {
+        const filter = whereConditionToNotionFilter(condition, properties)
+
+        or.push(filter)
+    }
+
+    const result = {}
+
+    if (and.length) {
+        result['and'] = and
+    }
+
+    if (or.length) {
+        result['or'] = or
+    }
+
+    if (!Object.keys(result).length) {
+        return
     }
 
     return result

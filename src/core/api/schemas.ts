@@ -25,3 +25,47 @@ export const common = {
     provider: v.string(),
     config: v.optional(v.record(v.string(), v.any())),
 }
+
+export function transformWhere(where: any) {
+    const { and, or, ...rest } = where
+    const result: any = {
+        and: [],
+        or: [],
+    }
+
+    if (rest?.field && rest?.operator && rest?.value) {
+        return {
+            and: [
+                {
+                    field: rest.field,
+                    operator: rest.operator,
+                    value: rest.value,
+                },
+            ],
+        }
+    }
+
+    for (const [key, value] of Object.entries<any>(rest)) {
+        result.and.push({
+            field: value.field || key,
+            operator: value?.operator || 'eq',
+            value: value?.value || value,
+        })
+    }
+
+    if (and?.length) {
+        and.forEach((w: any) => {
+            result.and.push(...transformWhere(w).and)
+        })
+    }
+
+    if (or?.length) {
+        or.forEach((w: any) => {
+            result.or.push(...transformWhere(w).and)
+        })
+    }
+
+    return result
+}
+
+export const where = v.pipe(v.record(v.string(), v.any()), v.transform(transformWhere))

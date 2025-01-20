@@ -6,7 +6,7 @@ import { InferOutput } from 'valibot'
 import omit from 'lodash-es/omit.js'
 import pick from 'lodash-es/pick.js'
 import { get, has, merge } from 'lodash-es'
-import { toDataItem, toNotionObject } from './parse.js'
+import { toDataItem, toNotionFilter, toNotionObject } from './parse.js'
 import { tryCatch } from '@/utils/tryCatch.js'
 
 const schema = v.object({
@@ -65,48 +65,6 @@ export function createNotionProvider() {
             return body
         }
 
-        function convertWhere(where: any, properties: any) {
-            const and = [] as any
-            const or = [] as any
-
-            for (const [key, value] of Object.entries(where)) {
-                const property = properties[key]
-
-                if (!property) continue
-
-                if (property.type === 'title') {
-                    and.push({
-                        property: key,
-                        rich_text: {
-                            equals: value,
-                        },
-                    })
-
-                    continue
-                }
-
-                if (property.type === 'formula') {
-                    and.push({
-                        property: key,
-                        rich_text: {
-                            equals: value,
-                        },
-                    })
-
-                    continue
-                }
-            }
-
-            return {
-                and,
-                or,
-            }
-        }
-
-        function convertSort(sort: any) {
-            return sort
-        }
-
         async function findProperties() {
             const response = await api(`databases/${database_id}`)
 
@@ -127,25 +85,20 @@ export function createNotionProvider() {
             }
 
             if (where) {
-                body.filter = convertWhere(where, properties)
+                body.filter = toNotionFilter(where, properties)
             }
 
-            const response = await api(`databases/${database_id}/query`, {
-                method: 'POST',
-                body: JSON.stringify(body),
-            })
-
-            const responseBody = await response.json()
-
-            if (!response.ok) {
-                console.error(body.filter)
-                console.error(responseBody)
-                throw new Error('Notion API error')
-            }
+            const { results, has_more, next_cursor, request_id } = await api(
+                `databases/${database_id}/query`,
+                {
+                    method: 'POST',
+                    body: JSON.stringify(body),
+                }
+            )
 
             let items = [] as any[]
 
-            for (const notionObject of responseBody.results) {
+            for (const notionObject of results) {
                 const item = toDataItem(notionObject)
 
                 item._raw = notionObject
@@ -170,15 +123,24 @@ export function createNotionProvider() {
 
             return {
                 meta: {
-                    has_more: responseBody.has_more,
-                    next_cursor: responseBody.next_cursor,
-                    request_id: responseBody.request_id,
+                    has_more,
+                    next_cursor,
+                    request_id,
                 },
                 data: items,
             }
         }
 
-        // const find: DataProvider['find'] = async (where, field) => {}
+        const find: DataProvider['find'] = async (options) => {
+            const { data: items } = await list({
+                ...options,
+                pagination: {
+                    page_size: 1,
+                },
+            })
+
+            return items[0] || null
+        }
 
         const create: DataProvider['create'] = async (data) => {
             const properties = await findProperties()
@@ -203,6 +165,7 @@ export function createNotionProvider() {
 
         return {
             list,
+            find,
             create,
         }
     })

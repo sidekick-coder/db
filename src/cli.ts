@@ -49,6 +49,14 @@ async function run() {
 
     const options = { ...flags } as any
 
+    if (flags['w']) {
+        options.where = flags['w']
+    }
+
+    if (flags['d']) {
+        options.database = flags['d']
+    }
+
     // handle vars flags
     const varsFlags = ['config', 'where', 'data', 'pagination', 'sort', 'field']
 
@@ -85,8 +93,8 @@ async function run() {
     }
 
     // handle selected database
-    if (options.database || options.d) {
-        db.select(options.database || options.d)
+    if (options.database) {
+        db.select(options.database)
     }
 
     if (name == 'list') {
@@ -101,6 +109,15 @@ async function run() {
         print(response.meta)
 
         print(response.data, {
+            format: options.format,
+            vertical: !!options['print-vertical'],
+        })
+    }
+
+    if (name == 'find') {
+        const response = await db.find(options)
+
+        print(response, {
             format: options.format,
             vertical: !!options['print-vertical'],
         })

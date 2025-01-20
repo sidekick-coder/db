@@ -1,6 +1,7 @@
 import { vWithExtras as v } from '../validator/index.js'
 import { DbConfig, dbConfigSchema } from './schemas.js'
 import { list as baseList, type ListOptions } from './list.js'
+import { find as baseFind, FindOptions } from './find.js'
 import { create as baseCreate, type CreateOptions } from './create.js'
 import { update as baseUpdate, type UpdateOptions } from './update.js'
 import { destroy as baseDestroy, type DestroyOptions } from './destroy.js'
@@ -49,6 +50,12 @@ export function createDb(config: DbConfig) {
         return baseList(options)
     }
 
+    function find(payload: Omit<FindOptions, 'dbConfig'>) {
+        const options = baseOptions(payload)
+
+        return baseFind(options)
+    }
+
     function create(payload: Omit<CreateOptions, 'dbConfig'>) {
         const options = baseOptions(payload)
 
@@ -72,6 +79,7 @@ export function createDb(config: DbConfig) {
         select,
 
         list,
+        find,
         create,
         update,
         destroy,

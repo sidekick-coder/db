@@ -1,19 +1,29 @@
 import { vWithExtras as v } from '@/core/validator/index.js'
 import { InferOutput } from 'valibot'
-import { common } from './schemas.js'
+import { common, where } from './schemas.js'
 
 export interface ListOptions extends InferOutput<typeof schema> {}
 
+const stringList = v.pipe(
+    v.any(),
+    v.transform((value) => {
+        if (typeof value === 'string') {
+            return value.split(',')
+        }
+
+        if (Array.isArray(value)) {
+            return value
+        }
+    }),
+    v.array(v.string())
+)
+
 const schema = v.object({
     ...common,
-    where: v.optional(v.record(v.string(), v.any())),
+    where: v.optional(where),
     pagination: v.optional(v.record(v.string(), v.any())),
-    field: v.optional(
-        v.object({
-            exclude: v.optional(v.array(v.string())),
-            include: v.optional(v.array(v.string())),
-        })
-    ),
+    include: v.optional(stringList),
+    exclude: v.optional(stringList),
 })
 
 export async function list(payload: ListOptions) {
@@ -23,8 +33,8 @@ export async function list(payload: ListOptions) {
     const config = options.config
 
     const where = options.where
-    const include = options.field?.include
-    const exclude = options.field?.exclude
+    const include = options?.include
+    const exclude = options?.exclude
     const pagination = options.pagination
 
     const mount = options.providerList.get(providerName)
