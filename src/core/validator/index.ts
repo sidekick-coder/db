@@ -55,8 +55,22 @@ const vars = v.optional(
     )
 )
 
+const stringList = v.pipe(
+    v.any(),
+    v.transform((value) => {
+        if (typeof value === 'string') {
+            return value.split(',')
+        }
+
+        if (Array.isArray(value)) {
+            return value
+        }
+    }),
+    v.array(v.string())
+)
 const extras = {
     vars,
+    stringList,
     number: v.pipe(
         v.any(),
         v.transform(Number),

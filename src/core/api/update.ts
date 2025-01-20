@@ -1,13 +1,13 @@
 import { vWithExtras as v } from '@/core/validator/index.js'
 import { InferOutput } from 'valibot'
-import { common } from './schemas.js'
+import { common, where } from './schemas.js'
 
 export interface UpdateOptions extends InferOutput<typeof schema> {}
 
 const schema = v.object({
     ...common,
     data: v.record(v.string(), v.any()),
-    where: v.optional(v.record(v.string(), v.any())),
+    where: v.optional(where),
 })
 
 export async function update(payload: UpdateOptions) {

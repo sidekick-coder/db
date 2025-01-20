@@ -1,5 +1,5 @@
 import { DataItem, Where, WhereCondition } from '@/core/provider/types.js'
-import { has, get, merge } from 'lodash-es'
+import { has, get } from 'lodash-es'
 
 function getOne(value: any, keys: string[]) {
     for (const key of keys) {
@@ -204,6 +204,19 @@ function whereConditionToNotionFilter(condition: WhereCondition, properties: any
 
     const operator = operatorMap[condition.operator!]
 
+    if (property.type === 'formula') {
+        and.push({
+            property: condition.field,
+            [property.type]: {
+                string: {
+                    contains: condition.value,
+                },
+            },
+        })
+
+        return { and }
+    }
+
     and.push({
         property: condition.field,
         [property.type]: {
@@ -218,23 +231,15 @@ export function toNotionFilter(where: Where, properties: any) {
     const and = [] as any[]
     const or = [] as any[]
 
-    const operatorMap = {
-        eq: 'equals',
-        ne: 'does_not_equal',
-        gt: 'greater_than',
-        gte: 'greater_than_or_equal_to',
-        lt: 'less_than',
-        lte: 'less_than_or_equal_to',
-        in: 'contains',
-        nin: 'does_not_contain',
-        like: 'contains',
-        nlike: 'does_not_contain',
-    }
-
     const andConditions = where.and || []
 
     for (const condition of andConditions) {
         const filter = whereConditionToNotionFilter(condition, properties)
+
+        if (filter?.and.length === 1 && !filter.or) {
+            and.push(filter.and[0])
+            continue
+        }
 
         and.push(filter)
     }

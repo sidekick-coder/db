@@ -7,12 +7,8 @@ export interface FindOptions extends InferOutput<typeof schema> {}
 const schema = v.object({
     ...common,
     where: v.optional(where),
-    field: v.optional(
-        v.object({
-            exclude: v.optional(v.array(v.string())),
-            include: v.optional(v.array(v.string())),
-        })
-    ),
+    include: v.optional(v.extras.stringList),
+    exclude: v.optional(v.extras.stringList),
 })
 
 export async function find(payload: FindOptions) {
@@ -22,8 +18,8 @@ export async function find(payload: FindOptions) {
     const config = options.config
 
     const where = options.where
-    const include = options.field?.include
-    const exclude = options.field?.exclude
+    const include = options?.include
+    const exclude = options?.exclude
 
     const mount = options.providerList.get(providerName)
 

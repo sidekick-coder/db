@@ -102,6 +102,7 @@ export function createNotionProvider() {
                 const item = toDataItem(notionObject)
 
                 item._raw = notionObject
+                item._id = notionObject.id
 
                 items.push(item)
             }
@@ -159,7 +160,32 @@ export function createNotionProvider() {
             return toDataItem(response)
         }
 
-        // const update: DataProvider['update'] = async (data, where) => {}
+        const update: DataProvider['update'] = async (payload, where) => {
+            const { data, meta } = await list({ where, exclude: [] })
+
+            const properties = await findProperties()
+
+            let count = 0
+
+            for await (const item of data) {
+                count++
+
+                const notionObject = toNotionObject(payload, properties)
+
+                await api(`pages/${item._id}`, {
+                    method: 'PATCH',
+                    body: JSON.stringify(notionObject),
+                })
+            }
+
+            if (meta.has_more) {
+                const nextCount = await update!(payload, where)
+
+                count += nextCount.count
+            }
+
+            return { count }
+        }
 
         // const destroy: DataProvider['destroy'] = async (where) => {}
 
@@ -167,6 +193,7 @@ export function createNotionProvider() {
             list,
             find,
             create,
+            update,
         }
     })
 }

@@ -4,26 +4,12 @@ import { common, where } from './schemas.js'
 
 export interface ListOptions extends InferOutput<typeof schema> {}
 
-const stringList = v.pipe(
-    v.any(),
-    v.transform((value) => {
-        if (typeof value === 'string') {
-            return value.split(',')
-        }
-
-        if (Array.isArray(value)) {
-            return value
-        }
-    }),
-    v.array(v.string())
-)
-
 const schema = v.object({
     ...common,
     where: v.optional(where),
     pagination: v.optional(v.record(v.string(), v.any())),
-    include: v.optional(stringList),
-    exclude: v.optional(stringList),
+    include: v.optional(v.extras.stringList),
+    exclude: v.optional(v.extras.stringList),
 })
 
 export async function list(payload: ListOptions) {

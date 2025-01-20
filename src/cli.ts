@@ -130,11 +130,9 @@ async function run() {
     }
 
     if (name == 'update') {
-        const { data: items } = await db.list(options)
-
-        if (items.length > 1) {
+        if (!options.where) {
             const confirmation = await confirm({
-                message: `This will update ${items.length} items. Are you sure?`,
+                message: `You are not providing a where clause. Are you sure you want to update all items?`,
             })
 
             if (!confirmation) {
@@ -148,11 +146,9 @@ async function run() {
     }
 
     if (['destroy', 'delete'].includes(name)) {
-        const { data: items } = await db.list(options)
-
-        if (items.length > 1) {
+        if (!options.where) {
             const confirmation = await confirm({
-                message: `This will destroy ${items.length} items. Are you sure?`,
+                message: `You are not providing a where clause. Are you sure you want to delete all items?`,
             })
 
             if (!confirmation) {
