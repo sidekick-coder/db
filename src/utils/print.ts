@@ -109,7 +109,7 @@ export function print(data: any, options?: Options) {
             colWidths: [Math.floor(screenWidth * 0.2), Math.floor(screenWidth * 0.7)],
         })
 
-        for (const key of Object.keys(data)) {
+        for (const key of Object.keys(data || {})) {
             table.push([key, parse(data[key])])
         }
 
