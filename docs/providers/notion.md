@@ -6,7 +6,6 @@ This provider use a database from notion as a data source.
 
 | name | Type | Description |
 | --- | --- | --- |
-| path | `string` | Folder path, an absolute path or relative to the `db.config.yml` file
 | secret_token | `string` | Notion token key to access the database 
 | database_id | `string` | Notion database id 
 

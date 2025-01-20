@@ -12,6 +12,16 @@ And normaly the properties of the item are saved in a `index.(md|json)`
 | format | `markdown \| json \| yaml \| yml` | Format to save `index` file
 | id | [IDStrategy](../id-strategy.md) | Id strategy to generate ids for the items in the database
 
+## Computed properties
+
+This are properties that are defined after the items are loaded and they are hidden by default, to show them you need to explicitly ask for them in `include` option or pass a empty array to `exclude` option to show all properties.
+
+| name | Type | Description |
+| --- | --- | --- |
+| _id | `string` | folder basename treated as id
+| _folder | `string` | Folder absolute path
+| _raw | `string` | Content of the `index` file
+
 ### Cli
 
 ```bash
