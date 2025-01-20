@@ -5,7 +5,9 @@ import { InferOutput } from 'valibot'
 
 import omit from 'lodash-es/omit.js'
 import pick from 'lodash-es/pick.js'
-import { get, has } from 'lodash-es'
+import { get, has, merge } from 'lodash-es'
+import { toDataItem, toNotionObject } from './parse.js'
+import { tryCatch } from '@/utils/tryCatch.js'
 
 const schema = v.object({
     database_id: v.string(),
@@ -30,6 +32,38 @@ export interface NotionProviderConfig extends InferOutput<typeof schema> {}
 export function createNotionProvider() {
     return defineProvider((config: any) => {
         const { secret_token, database_id } = v.parse(schema, config)
+
+        const api = async (path: string, options: RequestInit = {}) => {
+            const defaultOptions = {
+                headers: {
+                    'Authorization': `Bearer ${secret_token}`,
+                    'Notion-Version': '2022-06-28',
+                    'Content-Type': 'application/json',
+                },
+            }
+
+            const [response, error] = await tryCatch(async () =>
+                fetch(`https://api.notion.com/v1/${path}`, merge(defaultOptions, options))
+            )
+
+            if (error) {
+                throw error
+            }
+
+            const body = await response.json()
+
+            if (!response.ok) {
+                console.error(body)
+                throw new Error('Notion API error')
+            }
+
+            if (body.object === 'error') {
+                console.error(body)
+                throw new Error('Notion API error')
+            }
+
+            return body
+        }
 
         function convertWhere(where: any, properties: any) {
             const and = [] as any
@@ -73,77 +107,10 @@ export function createNotionProvider() {
             return sort
         }
 
-        function convertItem(item: any) {
-            const result: any = {}
-
-            result.id = item.id
-
-            for (const [key, value] of Object.entries<any>(item.properties)) {
-                if (value.id === 'title') {
-                    result[key] = value.title.map((t: any) => t.plain_text).join('')
-                    continue
-                }
-
-                if (value.type === 'status') {
-                    result[key] = get(value, 'status.name')
-                    continue
-                }
-
-                if (value.type === 'number') {
-                    result[key] = value.number
-                    continue
-                }
-
-                if (value.type === 'formula') {
-                    result[key] = getOne(value.formula, ['number', 'string'])
-                    continue
-                }
-
-                if (value.type === 'select') {
-                    result[key] = get(value, 'select.name')
-                    continue
-                }
-
-                if (value.type === 'multi_select') {
-                    result[key] = value.multi_select.map((s: any) => s?.name)
-                    continue
-                }
-
-                if (value.type === 'url') {
-                    result[key] = value.url
-                    continue
-                }
-
-                if (value.type === 'files') {
-                    result[key] = value.files
-                    continue
-                }
-
-                if (value.type === 'last_edited_time') {
-                    result[key] = value.last_edited_time
-                    continue
-                }
-
-                if (value.type === 'created_time') {
-                    result[key] = value.created_time
-                    continue
-                }
-            }
-
-            return result
-        }
-
         async function findProperties() {
-            const response = await fetch(`https://api.notion.com/v1/databases/${database_id}`, {
-                headers: {
-                    'Authorization': `Bearer ${secret_token}`,
-                    'Notion-Version': '2022-06-28',
-                },
-            })
+            const response = await api(`databases/${database_id}`)
 
-            const body = await response.json()
-
-            return body.properties
+            return response.properties
         }
 
         const list: DataProvider['list'] = async (options) => {
@@ -163,18 +130,10 @@ export function createNotionProvider() {
                 body.filter = convertWhere(where, properties)
             }
 
-            const response = await fetch(
-                `https://api.notion.com/v1/databases/${database_id}/query`,
-                {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${secret_token}`,
-                        'Notion-Version': '2022-06-28',
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(body),
-                }
-            )
+            const response = await api(`databases/${database_id}/query`, {
+                method: 'POST',
+                body: JSON.stringify(body),
+            })
 
             const responseBody = await response.json()
 
@@ -186,10 +145,10 @@ export function createNotionProvider() {
 
             let items = [] as any[]
 
-            for (const file of responseBody.results) {
-                const item = convertItem(file)
+            for (const notionObject of responseBody.results) {
+                const item = toDataItem(notionObject)
 
-                item._raw = file
+                item._raw = notionObject
 
                 items.push(item)
             }
@@ -221,7 +180,22 @@ export function createNotionProvider() {
 
         // const find: DataProvider['find'] = async (where, field) => {}
 
-        // const create: DataProvider['create'] = async (data) => {}
+        const create: DataProvider['create'] = async (data) => {
+            const properties = await findProperties()
+
+            const notionObject = toNotionObject(data, properties)
+
+            notionObject.parent = {
+                database_id,
+            }
+
+            const response = await api(`pages`, {
+                method: 'POST',
+                body: JSON.stringify(notionObject),
+            })
+
+            return toDataItem(response)
+        }
 
         // const update: DataProvider['update'] = async (data, where) => {}
 
@@ -229,6 +203,7 @@ export function createNotionProvider() {
 
         return {
             list,
+            create,
         }
     })
 }
