@@ -7,16 +7,6 @@ A simple cli to manage your data
 
 </div>
 
-## Roadmap
-
-- [x] markdown provider
-- [x] folder provider
-- [x] json provider
-- [x] yaml provider
-- [ ] sql provider
-- [ ] csv provider
-
-- [ ] aggregation command (sum, avg, group by, etc)
 
 ## Installation
 
@@ -33,6 +23,13 @@ db list --provider markdown --config "path=tasks-folder"  --where status=done
 
 db list --where status=done
 ```
+
+## Providers 
+
+- [Markdown](./docs/providers/markdown.md)
+- [Json](./docs/providers/json.md)
+- [Folder](./docs/providers/folder.md)
+- [Notion](./docs/providers/notion.md)
 
 ## Database
 
