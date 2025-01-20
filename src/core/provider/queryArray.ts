@@ -2,7 +2,7 @@ import sift from 'sift'
 import { Where, WhereCondition } from './types.js'
 
 const operatorMap = {
-    '=': '$eq',
+    'eq': '$eq',
     '!=': '$ne',
     '>': '$gt',
     '>=': '$gte',
@@ -14,10 +14,14 @@ const operatorMap = {
 function parseCondition(condition: WhereCondition) {
     const { field, operator, value } = condition
 
+    if (!field || !operator || value === undefined) {
+        return {}
+    }
+
     const siftOperator = operatorMap[operator!]
 
     if (!siftOperator) {
-        throw new Error(`Unsupported operator: ${value.operator}`)
+        throw new Error(`Unsupported operator: ${operator}`)
     }
 
     return {
