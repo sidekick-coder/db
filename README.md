@@ -175,7 +175,7 @@ db create --data "title=New task&status=todo&body=This is a new task"
 ```
 
 ```bash
-db create --data "@new-task.yml"
+db create --data "new-task.yml"
 ```
 
 ```bash
@@ -204,7 +204,7 @@ db update --data "status=done" --where "id=01"
 ```
 
 ```bash
-db update --data "@update-task.yml" --where "id=01"
+db update --data "update-task.yml" --where "id=01"
 ```
 
 ```bash
@@ -232,7 +232,7 @@ db destroy --where "id=01"
 ```
 
 ```bash
-db destroy --where "@delete-task.yml"
+db destroy --where "delete-task.yml"
 ```
 
 ```bash
@@ -253,12 +253,12 @@ db list --where "path=data"
 
 ### load from file
 
-You can load the value from a file by prefixing the string with `@`
+You can load the value from a file by adding the extension to the value
 
 Accepted formats are `yml`, `yaml`, `json`
 
 ```bash
-db list --where "@query.yml" 
+db list --where "query.yml" 
 ```
 
 ### json
@@ -269,6 +269,30 @@ You can pass a json string directly
 db list --where '{"path": "data"}'
 ```
 
+## Views 
+
+You can declare a view in a file to be more easy to use in the cli
+
+```yaml
+ # properties to include
+include: [id, title, status]
+
+# sort by
+sort-by: id
+sort-desc: true
+
+# where statments
+where: 
+    status: done
+```
+
+```bash
+db list --view "done-tasks.yml"
+
+# or short version 
+
+db list -v "done-tasks.yml"
+```
 
 ## Output format 
 
