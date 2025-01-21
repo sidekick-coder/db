@@ -234,7 +234,7 @@ export function toNotionFilter(where: Where, properties: any) {
     const andConditions = where.and || []
 
     for (const condition of andConditions) {
-        const filter = whereConditionToNotionFilter(condition, properties)
+        const filter = whereConditionToNotionFilter(condition as WhereCondition, properties)
 
         if (filter?.and?.length === 1 && !filter.or) {
             and.push(filter.and[0])
@@ -247,7 +247,7 @@ export function toNotionFilter(where: Where, properties: any) {
     const orConditions = where.or || []
 
     for (const condition of orConditions) {
-        const filter = whereConditionToNotionFilter(condition, properties)
+        const filter = whereConditionToNotionFilter(condition as WhereCondition, properties)
 
         or.push(filter)
     }
