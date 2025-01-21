@@ -51,6 +51,7 @@
     },
     "scripts": {
         "dev": "tsup --watch src",
+        "test": "vitest",
         "lint": "eslint",
         "build": "tsup",
         "prepublishOnly": "tsup --dts"
@@ -62,7 +63,9 @@
         "eslint": "^9.18.0",
         "tsup": "^8.3.5",
         "tsx": "^4.19.2",
-        "typescript": "5.6"
+        "typescript": "5.6",
+        "vite-tsconfig-paths": "^5.1.4",
+        "vitest": "^3.0.3"
     },
     "dependencies": {
         "@inquirer/prompts": "^7.2.3",

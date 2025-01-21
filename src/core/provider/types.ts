@@ -9,11 +9,11 @@ export interface WhereGroup {
     and?: WhereCondition[]
 }
 
-export interface WhereMain {
-    [key: string]: Omit<WhereCondition, 'field'> | any
+export interface Where {
+    [key: string]: any
+    and?: Where[]
+    or?: Where[]
 }
-
-export type Where = WhereMain & WhereGroup
 
 export interface Field {
     exclude?: string[]
@@ -44,7 +44,7 @@ export interface ListResponse {
 
 export interface DataProvider {
     list?: (options?: ListOptions) => Promise<ListResponse>
-    find?: (options?: Omit<ListOptions, 'pagination'>) => Promise<DataItem | null>
+    find?: (where?: Where, field?: Field) => Promise<DataItem | null>
     create?: (data: any) => Promise<DataItem>
     update?: (data: any, where?: Where) => Promise<{ count: number }>
     destroy?: (where?: Where) => Promise<{ count: number }>
