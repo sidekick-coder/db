@@ -13,13 +13,13 @@ const vars = v.optional(
                 return value
             }
 
-            if (value.startsWith('@') && value.endsWith('.json')) {
+            if (value.endsWith('.json')) {
                 return readJson(value.replace(/^@/, ''), {
                     transformRelativePaths: true,
                 })
             }
 
-            if (value.startsWith('@') && (value.endsWith('.yml') || value.endsWith('.yaml'))) {
+            if (value.endsWith('.yml') || value.endsWith('.yaml')) {
                 const file = value.replace(/^@/, '')
                 const folder = dirname(file)
 

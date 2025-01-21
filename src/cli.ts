@@ -53,17 +53,29 @@ async function run() {
         options.where = flags['w']
     }
 
+    if (flags['v']) {
+        options.view = flags['v']
+    }
+
     if (flags['d']) {
         options.database = flags['d']
     }
 
     // handle vars flags
-    const varsFlags = ['config', 'where', 'data', 'pagination', 'sort', 'field']
+    const varsFlags = ['config', 'where', 'data', 'pagination', 'sort', 'view']
 
     for (const key of varsFlags) {
         if (options[key]) {
             options[key] = v.parse(v.extras.vars, options[key])
         }
+    }
+
+    if (options.view) {
+        options.where = options.where || options.view.where
+        options.sort = options.sort || options.view.sort
+        options.pagination = options.pagination || options.view.pagination
+        options.include = options.include || options.view.include
+        options.exclude = options.exclude || options.view.exclude
     }
 
     // handle provider paths
