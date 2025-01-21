@@ -85,7 +85,7 @@ Complex filters can be a little verbose to do in a inline, so you can also use a
 ##### YAML
 
 ```bash
-db list --where "@query.yml" # load file
+db list --where "query.yml" # load file
 ```
 
 ```yaml
@@ -106,7 +106,7 @@ or:
 ##### JSON
 
 ```bash
-db list --where "@query.json" # load file
+db list --where "query.json" # load file
 ```
 
 ```js
