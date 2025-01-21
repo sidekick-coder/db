@@ -33,7 +33,7 @@ export function transformWhere(where: any) {
         or: [],
     }
 
-    if (rest?.field && rest?.operator && rest?.value) {
+    if (rest?.field && rest?.operator) {
         return {
             and: [
                 {

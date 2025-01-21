@@ -136,9 +136,10 @@ export function createFileProvider(providerConfig: ProviderConfig) {
 
             await drive.write(filename, content)
 
-            const item = await find({ where: { _id: String(id) } })!
-
-            return item!
+            return {
+                _id: id,
+                ...properties,
+            }
         }
 
         const update: DataProvider['update'] = async (data, where) => {
