@@ -1,87 +1,39 @@
 import { vWithExtras as v } from '../validator/index.js'
 import { DbConfig, dbConfigSchema } from './schemas.js'
-import { list as baseList, type ListOptions } from './list.js'
-import { find as baseFind, FindOptions } from './find.js'
-import { create as baseCreate, type CreateOptions } from './create.js'
-import { update as baseUpdate, type UpdateOptions } from './update.js'
-import { destroy as baseDestroy, type DestroyOptions } from './destroy.js'
+import { createDatabase } from '../database/index.js'
 
-export function createDb(config: DbConfig) {
-    const providerList = new Map(Object.entries(config.providers))
-    const dbConfig = v.parse(dbConfigSchema, config)
-    const defaultDatabase = dbConfig.databases.find((db) => db.name === dbConfig.default_database)
-
-    const current = {
-        name: defaultDatabase?.name,
-        provider: defaultDatabase?.provider,
-        config: defaultDatabase?.config,
-    }
+export function createInstace(payload: DbConfig) {
+    const config = v.parse(dbConfigSchema, payload)
 
     function addProvider(name: string, provider: any) {
-        providerList.set(name, provider)
+        config.providers.push({
+            name,
+            provider,
+        })
     }
 
-    function select(name: string) {
-        const db = dbConfig.databases.find((db) => db.name === name)
+    function use(name: string) {
+        const db = config.databases.find((db) => db.name === name)
 
         if (!db) {
             throw new Error(`Database "${name}" not found`)
         }
 
-        current.name = db.name
-        current.provider = db.provider
-        current.config = db.config
-    }
+        const provider = config.providers.find((p) => p.name === db.provider)
 
-    function baseOptions(payload: any) {
-        return {
-            name: current.name,
-            provider: current.provider,
-            config: current.config,
-            providerList,
-            dbConfig,
-            ...payload,
+        if (!provider) {
+            throw new Error(`Provider "${db.provider}" not found`)
         }
-    }
 
-    function list(payload?: Omit<ListOptions, 'dbConfig'>) {
-        const options = baseOptions(payload)
-
-        return baseList(options)
-    }
-
-    function find(payload: Omit<FindOptions, 'dbConfig'>) {
-        const options = baseOptions(payload)
-
-        return baseFind(options)
-    }
-
-    function create(payload: Omit<CreateOptions, 'dbConfig'>) {
-        const options = baseOptions(payload)
-
-        return baseCreate(options)
-    }
-
-    function update(payload: Omit<UpdateOptions, 'dbConfig'>) {
-        const options = baseOptions(payload)
-
-        return baseUpdate(options)
-    }
-
-    function destroy(payload: Omit<DestroyOptions, 'dbConfig'>) {
-        const options = baseOptions(payload)
-
-        return baseDestroy(options)
+        return createDatabase({
+            name: db.name,
+            provider: provider.provider,
+            config: db.config,
+        })
     }
 
     return {
         addProvider,
-        select,
-
-        list,
-        find,
-        create,
-        update,
-        destroy,
+        use,
     }
 }

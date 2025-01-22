@@ -1,17 +1,22 @@
 import { InferOutput } from 'valibot'
 import { vWithExtras as v } from '../validator/index.js'
-
-export const dbSchema = v.object({
-    name: v.optional(v.string()),
-    provider: v.string(),
-    config: v.record(v.string(), v.any()),
-})
+import { providerSchema } from '../provider/schema.js'
 
 export interface DbConfig extends InferOutput<typeof dbConfigSchema> {}
 
+export const dbSchema = v.object({
+    name: v.string(),
+    provider: v.string(),
+    config: v.optional(v.record(v.string(), v.any()), {}),
+})
+
+export const dbConfigProvider = v.object({
+    name: v.string(),
+    provider: v.pipe(v.function(), v.args(v.tuple([v.any()])), v.returns(providerSchema)),
+})
+
 export const dbConfigSchema = v.object({
-    providers: v.record(v.string(), v.any()),
-    default_database: v.optional(v.string()),
+    providers: v.array(dbConfigProvider),
     databases: v.pipe(
         v.any(),
         v.transform((v) => (Array.isArray(v) ? v : [v])),

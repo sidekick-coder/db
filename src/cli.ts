@@ -2,7 +2,7 @@
 import { readConfig } from '@/utils/filesystem.js'
 import minimist from 'minimist'
 import { resolve } from 'path'
-import { createDb } from '@/core/api/index.js'
+import { createInstace } from '@/core/api/index.js'
 import { drive } from './core/drive/index.js'
 import { print } from './utils/print.js'
 import { confirm } from '@inquirer/prompts'
@@ -13,6 +13,7 @@ import { createFolderProvider } from './providers/folder/index.js'
 import { createJsonProvider, createMarkdownProvider } from './providers/file/index.js'
 import { createYamlProvider } from './providers/file/yaml.js'
 import { createNotionProvider } from './providers/notion/index.js'
+import { resolveConfig } from './core/config/resolveConfig.js'
 
 async function run() {
     const { _: allArgs, ...flags } = minimist(process.argv.slice(2))
@@ -20,6 +21,7 @@ async function run() {
     const [name] = allArgs
 
     const files = [
+        resolve(process.env.HOME!, '.config', 'db', 'config.yml'),
         resolve(process.cwd(), 'db.config.yml'),
         resolve(process.cwd(), 'db.config.yaml'),
         resolve(process.cwd(), 'db.config.json'),
@@ -29,22 +31,43 @@ async function run() {
         files.unshift(resolve(process.cwd(), flags['db-config']))
     }
 
-    const homeConfig = readConfig([resolve(process.env.HOME!, '.config', 'db', 'config.yml')]) || {}
-    const localConfig = readConfig(files) || {}
+    const config = await resolveConfig({
+        files,
+        providers: [
+            {
+                name: 'folder',
+                provider: createFolderProvider(drive),
+            },
+            {
+                name: 'json',
+                provider: createJsonProvider(drive),
+            },
+            {
+                name: 'yaml',
+                provider: createYamlProvider({ drive, ext: 'yaml' }),
+            },
+            {
+                name: 'yml',
+                provider: createYamlProvider({ drive, ext: 'yml' }),
+            },
+            {
+                name: 'md',
+                provider: createMarkdownProvider(drive),
+            },
+            {
+                name: 'markdown',
+                provider: createMarkdownProvider(drive),
+            },
+            {
+                name: 'notion',
+                provider: createNotionProvider(),
+            },
+        ],
+    })
 
-    const raw = merge({}, homeConfig, localConfig)
-
-    const db = createDb({
-        ...raw,
-        databases: raw.databases || [],
-        providers: {
-            markdown: createMarkdownProvider(drive),
-            folder: createFolderProvider(drive),
-            json: createJsonProvider(drive),
-            yaml: createYamlProvider({ drive, ext: 'yaml' }),
-            yml: createYamlProvider({ drive, ext: 'yml' }),
-            notion: createNotionProvider(),
-        },
+    const instance = createInstace({
+        databases: config.databases,
+        providers: config.providers,
     })
 
     const options = { ...flags } as any
@@ -78,36 +101,7 @@ async function run() {
         options.exclude = options.exclude || options.view.exclude
     }
 
-    // handle provider paths
-    const isProviderPath = (path?: string) => path?.startsWith('/') || path?.startsWith('.')
-    const allProviders = [...(homeConfig?.providers || []), ...(localConfig?.providers || [])]
-
-    for (const p of allProviders) {
-        const mount = await import(resolve(process.cwd(), p.path))
-
-        db.addProvider(p.name, mount.default)
-    }
-
-    if (isProviderPath(options.provider)) {
-        const path = resolve(process.cwd(), options.provider)
-        const mount = await import(path)
-
-        db.addProvider(options.provider, mount.default)
-    }
-
-    for await (const item of raw?.databases || []) {
-        if (isProviderPath(item.provider)) {
-            const path = resolve(process.cwd(), item.provider)
-            const mount = await import(path)
-
-            db.addProvider(item.provider, mount.default)
-        }
-    }
-
-    // handle selected database
-    if (options.database) {
-        db.select(options.database)
-    }
+    const db = instance.use(options.database || config.default_database)
 
     if (name == 'list') {
         const response = await db.list(options)

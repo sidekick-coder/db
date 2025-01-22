@@ -1,3 +1,5 @@
+import { ProviderSchema } from './schema.js'
+
 export interface WhereCondition {
     field: string
     operator?: string
@@ -51,5 +53,5 @@ export interface DataProvider {
 }
 
 export interface MountDataProvider {
-    (config: any): DataProvider
+    (config: any): ProviderSchema
 }
