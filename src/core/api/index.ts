@@ -2,7 +2,7 @@ import { vWithExtras as v } from '../validator/index.js'
 import { DbConfig, dbConfigSchema } from './schemas.js'
 import { createDatabase } from '../database/index.js'
 
-export function createInstace(payload: DbConfig) {
+export function createInstance(payload: DbConfig) {
     const config = v.parse(dbConfigSchema, payload)
 
     function addProvider(name: string, provider: any) {

@@ -45,6 +45,14 @@ export function createDatabase(options: Options) {
         return baseDestroy(options)
     }
 
+    function method(name: string, ...args: any[]) {
+        if (!instance[name]) {
+            throw new Error(`Method ${name} does not exist`)
+        }
+
+        return instance[name](...args)
+    }
+
     function baseOptions(payload: any) {
         return {
             provider: instance,
@@ -61,5 +69,6 @@ export function createDatabase(options: Options) {
         create,
         update,
         destroy,
+        method,
     }
 }

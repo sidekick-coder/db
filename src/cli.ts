@@ -1,18 +1,12 @@
 #! /usr/bin/env node
-import { readConfig } from '@/utils/filesystem.js'
 import minimist from 'minimist'
 import { resolve } from 'path'
-import { createInstace } from '@/core/api/index.js'
-import { drive } from './core/drive/index.js'
+import { createInstance } from '@/core/api/index.js'
 import { print } from './utils/print.js'
 import { confirm } from '@inquirer/prompts'
 
 import { vWithExtras as v } from '@/core/validator/index.js'
-import { merge } from 'lodash-es'
-import { createFolderProvider } from './providers/folder/index.js'
-import { createJsonProvider, createMarkdownProvider } from './providers/file/index.js'
-import { createYamlProvider } from './providers/file/yaml.js'
-import { createNotionProvider } from './providers/notion/index.js'
+import { all } from './providers/index.js'
 import { resolveConfig } from './core/config/resolveConfig.js'
 
 async function run() {
@@ -33,39 +27,10 @@ async function run() {
 
     const config = await resolveConfig({
         files,
-        providers: [
-            {
-                name: 'folder',
-                provider: createFolderProvider(drive),
-            },
-            {
-                name: 'json',
-                provider: createJsonProvider(drive),
-            },
-            {
-                name: 'yaml',
-                provider: createYamlProvider({ drive, ext: 'yaml' }),
-            },
-            {
-                name: 'yml',
-                provider: createYamlProvider({ drive, ext: 'yml' }),
-            },
-            {
-                name: 'md',
-                provider: createMarkdownProvider(drive),
-            },
-            {
-                name: 'markdown',
-                provider: createMarkdownProvider(drive),
-            },
-            {
-                name: 'notion',
-                provider: createNotionProvider(),
-            },
-        ],
+        providers: all,
     })
 
-    const instance = createInstace({
+    const instance = createInstance({
         databases: config.databases,
         providers: config.providers,
     })

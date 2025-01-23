@@ -25,6 +25,13 @@ export function toDataItem(notionObject: any) {
             continue
         }
 
+        if (value.type === 'rich_text') {
+            const text = value.rich_text.map((t: any) => t.plain_text).join('')
+
+            result[key] = text
+            continue
+        }
+
         if (value.type === 'number') {
             result[key] = value.number
             continue
@@ -105,6 +112,24 @@ export function toNotionObject(itemData: DataItem, properties: any) {
 
             result.properties[key] = {
                 status: status,
+            }
+            continue
+        }
+
+        if (property.type === 'multi_select') {
+            const options = get(property, 'multi_select.options', [])
+
+            const multiSelect = value.map((v: any) => {
+                const option = options.find((o: any) => {
+                    if (o.name === v) return o
+                    if (o.id === v) return o
+                })
+
+                return option
+            })
+
+            result.properties[key] = {
+                multi_select: multiSelect,
             }
             continue
         }

@@ -52,7 +52,7 @@ export function transformWhere(where: any) {
 
     for (const [key, value] of Object.entries<any>(rest)) {
         result.and.push({
-            field: value.field || key,
+            field: value?.field || key,
             operator: value?.operator || 'eq',
             value: value?.value || value,
         })

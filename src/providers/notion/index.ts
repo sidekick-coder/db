@@ -5,7 +5,7 @@ import { InferOutput } from 'valibot'
 
 import omit from 'lodash-es/omit.js'
 import pick from 'lodash-es/pick.js'
-import { get, has, merge } from 'lodash-es'
+import { merge } from 'lodash-es'
 import { toDataItem, toNotionFilter, toNotionObject } from './parse.js'
 import { tryCatch } from '@/utils/tryCatch.js'
 
@@ -18,14 +18,6 @@ const paginationSchema = v.object({
     page_size: v.optional(v.extras.number),
     start_cursor: v.optional(v.string()),
 })
-
-function getOne(value: any, keys: string[]) {
-    for (const key of keys) {
-        if (has(value, key)) {
-            return get(value, key)
-        }
-    }
-}
 
 export interface NotionProviderConfig extends InferOutput<typeof schema> {}
 
@@ -218,6 +210,7 @@ export function createNotionProvider() {
             create,
             update,
             destroy,
+            findProperties,
         }
     })
 }
