@@ -88,19 +88,17 @@ export interface ValibotWithExtras extends Valibot {
     extras: typeof extras
 }
 
-export interface ValidatorCallback<T extends v.ObjectEntries> {
+export interface ValidatorCallback<T extends v.BaseSchema<unknown,unknown, v.BaseIssue<unknown>>> {
     (_v: ValibotWithExtras): T
 }
 
 export type ValidatorResult<T extends v.ObjectEntries> = v.InferOutput<v.ObjectSchema<T, undefined>>
 
-export function validate<T extends v.ObjectEntries>(cb: ValidatorCallback<T>, payload: any) {
-    const entries = cb({
+export function validate<T extends v.BaseSchema<unknown,unknown, v.BaseIssue<unknown>>>(cb: ValidatorCallback<T>, payload: any) {
+    const schema = cb({
         ...v,
         extras,
     })
 
-    const schema = v.object(entries)
-
-    return v.safeParse(schema, payload)
+    return v.parse(schema, payload)
 }

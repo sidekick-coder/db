@@ -8,6 +8,8 @@ import { confirm } from '@inquirer/prompts'
 import { vWithExtras as v } from '@/core/validator/index.js'
 import { all } from './providers/index.js'
 import { resolveConfig } from './core/config/resolveConfig.js'
+import { defaultsDeep, merge, mergeWith } from 'lodash-es'
+import { where } from './core/api/schemas.js'
 
 async function run() {
     const { _: allArgs, ...flags } = minimist(process.argv.slice(2))
@@ -15,11 +17,14 @@ async function run() {
     const [name] = allArgs
 
     const files = [
-        resolve(process.env.HOME!, '.config', 'db', 'config.yml'),
         resolve(process.cwd(), 'db.config.yml'),
         resolve(process.cwd(), 'db.config.yaml'),
         resolve(process.cwd(), 'db.config.json'),
     ]
+
+    if (process.env.HOME) {
+        files.unshift(resolve(process.env.HOME, '.config', 'db', 'config.yml'))
+    }
 
     if (flags['db-config']) {
         files.unshift(resolve(process.cwd(), flags['db-config']))
@@ -53,13 +58,45 @@ async function run() {
     const varsFlags = ['config', 'where', 'data', 'pagination', 'sort', 'view']
 
     for (const key of varsFlags) {
-        if (options[key]) {
-            options[key] = v.parse(v.extras.vars, options[key])
+        let value = Array.isArray(options[key]) ? options[key] : [options[key]]
+
+        if (!value.length) {
+            continue
         }
+
+        let result = {}
+
+        value.forEach((item) => {
+            const vars = v.parse(v.extras.vars, item)
+
+            result = mergeWith(result, vars, (objValue, srcValue) => {
+                if (Array.isArray(objValue)) {
+                    return objValue.concat(srcValue)
+                }
+            })
+        })
+
+        options[key] = result
+
+    }
+
+    // where shortcuts
+
+    if (!options.where.and) {
+        options.where.and = []
+    }
+    if(flags['where-in']) {
+        const [field, value] = flags['where-in'].split('=')
+
+        options.where.and.push({
+            field,
+            operator: 'in',
+            value: value.split(','),
+        })
     }
 
     if (options.view) {
-        options.where = options.where || options.view.where
+        options.where = merge(options.where, options.view.where)
         options.sort = options.sort || options.view.sort
         options.pagination = options.pagination || options.view.pagination
         options.include = options.include || options.view.include
@@ -83,6 +120,8 @@ async function run() {
             format: options.format,
             vertical: !!options['print-vertical'],
         })
+
+        return
     }
 
     if (name == 'find') {
@@ -92,12 +131,16 @@ async function run() {
             format: options.format,
             vertical: !!options['print-vertical'],
         })
+
+        return
     }
 
     if (name == 'create') {
         const response = await db.create(options)
 
         print(response, options.format)
+
+        return
     }
 
     if (name == 'update') {
@@ -114,6 +157,8 @@ async function run() {
         const response = await db.update(options)
 
         print(response, options.format)
+
+        return
     }
 
     if (['destroy', 'delete'].includes(name)) {
@@ -130,7 +175,11 @@ async function run() {
         const response = await db.destroy(options)
 
         print(response, options.format)
+
+        return
     }
+
+    console.log('Command not found')
 }
 
 run()

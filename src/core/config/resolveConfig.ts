@@ -1,6 +1,7 @@
 import { readConfig } from '@/utils/filesystem.js'
-import { ProviderSchema } from '../provider/schema.js'
 import { DbConfig } from '../api/schemas.js'
+import { resolve } from 'path'
+import { pathToFileURL } from 'url'
 
 interface Options {
     files: string[]
@@ -27,7 +28,9 @@ export async function resolveConfig(options: Options) {
 
         for await (const p of content?.providers || []) {
             if (p.provider.endsWith('.js')) {
-                const pModule = await import(p.provider)
+                const url = pathToFileURL(resolve(p.provider))
+
+                const pModule = await import(url.href)
 
                 result.providers.push({
                     name: p.name,
@@ -40,7 +43,9 @@ export async function resolveConfig(options: Options) {
             result.databases.push(db)
 
             if (db.provider.endsWith('.js')) {
-                const pModule = await import(db.provider)
+                const url = pathToFileURL(resolve(db.provider))
+
+                const pModule = await import(url.href)
 
                 result.providers.push({
                     name: db.provider,

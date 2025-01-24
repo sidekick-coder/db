@@ -100,6 +100,20 @@ export function toNotionObject(itemData: DataItem, properties: any) {
             continue
         }
 
+        if (property.type === 'rich_text') {
+            result.properties[key] = {
+                rich_text: [
+                    {
+                        type: 'text',
+                        text: {
+                            content: String(value),
+                        },
+                    },
+                ],
+            }
+            continue
+        }
+
         if (property.type === 'status') {
             const options = get(property, 'status.options', [])
 
@@ -198,6 +212,11 @@ export function toNotionObject(itemData: DataItem, properties: any) {
 
 function whereConditionToNotionFilter(condition: WhereCondition, properties: any) {
     const property = properties[condition.field]
+
+    if (!property) {
+        throw new Error(`Property ${condition.field} not found`)
+    }
+
     const operatorMap = {
         eq: 'equals',
         ne: 'does_not_equal',
@@ -227,6 +246,18 @@ function whereConditionToNotionFilter(condition: WhereCondition, properties: any
         return { or }
     }
 
+    if (condition.operator === 'exists') {
+        and.push({
+            property: condition.field,
+            [property.type]: {
+                is_not_empty: condition.value ? true : undefined,
+                is_empty: condition.value ? undefined : true,
+            },
+        })
+
+        return { and }
+    }
+
     const operator = operatorMap[condition.operator!]
 
     if (property.type === 'formula') {
@@ -241,6 +272,8 @@ function whereConditionToNotionFilter(condition: WhereCondition, properties: any
 
         return { and }
     }
+
+
 
     and.push({
         property: condition.field,
