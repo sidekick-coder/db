@@ -40,13 +40,9 @@ export function transformWhere(where: any) {
 
     if (rest?.field && rest?.operator) {
         return {
-            and: [
-                {
-                    field: rest.field,
-                    operator: rest.operator,
-                    value: rest.value,
-                },
-            ],
+            field: rest.field,
+            operator: rest.operator,
+            value: rest.value,
         }
     }
 
@@ -60,17 +56,29 @@ export function transformWhere(where: any) {
 
     if (and?.length) {
         and.forEach((w: any) => {
-            result.and.push(...transformWhere(w).and)
+            result.and.push(transformWhere(w))
         })
     }
 
     if (or?.length) {
         or.forEach((w: any) => {
-            result.or.push(...transformWhere(w).and)
+            result.or.push(transformWhere(w))
         })
+    }
+
+    // if (result.and.length === 1 && !result.or.length) {
+    //     return result.and[0]
+    // }
+
+    if (!result.or.length) {
+        delete result.or
+    }
+
+    if (!result.and.length) {
+        delete result.and 
     }
 
     return result
 }
 
-export const where = v.pipe(v.record(v.string(), v.any()), v.transform(transformWhere))
+export const where = v.pipe(v.any(), v.transform(transformWhere))

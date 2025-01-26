@@ -8,6 +8,7 @@ import pick from 'lodash-es/pick.js'
 import { merge } from 'lodash-es'
 import { toDataItem, toNotionFilter, toNotionObject } from './parse.js'
 import { tryCatch } from '@/utils/tryCatch.js'
+import { parseWhere } from './parseWhere.js'
 
 const schema = v.object({
     database_id: v.string(),
@@ -77,7 +78,9 @@ export function createNotionProvider() {
             }
 
             if (where) {
-                body.filter = toNotionFilter(where, properties)
+                // console.log('notion.where', JSON.stringify(where, null, 2))
+                body.filter = parseWhere(where, properties)
+                // console.log('notion.filter', JSON.stringify(body.filter, null, 2))
             }
 
             const { results, has_more, next_cursor, request_id } = await api(
