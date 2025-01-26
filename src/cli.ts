@@ -138,7 +138,10 @@ async function run() {
     if (name == 'create') {
         const response = await db.create(options)
 
-        print(response, options.format)
+        print(response, {
+            format: options.format,
+            vertical: !!options['print-vertical'],
+        })
 
         return
     }
@@ -156,7 +159,28 @@ async function run() {
 
         const response = await db.update(options)
 
-        print(response, options.format)
+        print(response, {
+            format: options.format,
+            vertical: !!options['print-vertical'],
+        })
+
+        return
+    }
+
+    if (name === 'method') {
+        if (!options.name) {
+            console.error('Method name not provided')
+            return
+        }
+
+        const args = v.parse(v.array(v.extras.vars), options.args || [])
+
+        const response = await db.method(options.name, args)
+
+        print(response, {
+            format: options.format,
+            vertical: !!options['print-vertical'],
+        })
 
         return
     }
@@ -179,7 +203,7 @@ async function run() {
         return
     }
 
-    console.log('Command not found')
+    console.error('Command not found')
 }
 
 run()
