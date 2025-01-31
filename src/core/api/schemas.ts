@@ -8,6 +8,8 @@ export const dbSchema = v.object({
     name: v.string(),
     provider: v.string(),
     config: v.optional(v.record(v.string(), v.any()), {}),
+    default_view: v.optional(v.string()),
+    views: v.optional(v.array(v.any()), []),
 })
 
 export const dbConfigProvider = v.object({

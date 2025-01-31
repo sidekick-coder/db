@@ -11,6 +11,7 @@ import { resolveConfig } from './core/config/resolveConfig.js'
 import { merge, mergeWith } from 'lodash-es'
 import { createRenderer } from './core/render/createRenderer.js'
 import consoleRender from './renders/console.js'
+import { parseFile } from './utils/vars.js'
 
 async function run() {
     const { _: allArgs, ...flags } = minimist(process.argv.slice(2))
@@ -58,7 +59,7 @@ async function run() {
     }
 
     // handle vars flags
-    const varsFlags = ['config', 'where', 'data', 'pagination', 'sort', 'view', 'render-options']
+    const varsFlags = ['config', 'where', 'data', 'pagination', 'sort', 'render-options']
 
     for (const key of varsFlags) {
         const value = Array.isArray(options[key]) ? options[key] : [options[key]]
@@ -87,6 +88,7 @@ async function run() {
     if (!options.where.and) {
         options.where.and = []
     }
+
     if (flags['where-in']) {
         const [field, value] = flags['where-in'].split('=')
 
@@ -95,6 +97,32 @@ async function run() {
             operator: 'in',
             value: value.split(','),
         })
+    }
+
+    const dbName = options.database || config.default_database
+
+    const db = instance.use(dbName)
+    const databaseDefintion = config.databases.find((db) => db.name === dbName)
+    const renderName = options.render || 'console'
+    const render = createRenderer({
+        renders: config.renders,
+    })
+
+    // view
+    if (!options.view && databaseDefintion.default_view) {
+        options.view = databaseDefintion.default_view
+    }
+
+    if (options.view) {
+        // try to find view in list
+        const view = databaseDefintion.views.find((v) => v.name === options.view)
+
+        // if not found, try to parse file
+        if (!view) {
+            //view = parseFile(options.view)
+        }
+
+        options.view = view
     }
 
     if (options.view) {
@@ -106,14 +134,6 @@ async function run() {
         options.render = options.render || options.view.render
         options['render-options'] = merge(options['render-options'], options.view['render_options'])
     }
-
-    const db = instance.use(options.database || config.default_database)
-    const renderName = options.render || 'console'
-    const render = createRenderer({
-        renders: config.renders,
-    })
-
-    console.log(options)
 
     if (name == 'list') {
         const response = await db.list(options)

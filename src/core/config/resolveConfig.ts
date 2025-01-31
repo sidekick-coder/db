@@ -3,6 +3,8 @@ import { DbConfig } from '../api/schemas.js'
 import { resolve } from 'path'
 import { pathToFileURL } from 'url'
 import { createRequire } from 'module'
+import { parseFile } from '@/utils/vars.js'
+import { merge } from 'lodash-es'
 
 const require = createRequire(import.meta.url)
 
@@ -67,6 +69,24 @@ export async function resolveConfig(options: Options) {
                     name: db.provider,
                     provider: createModuleProxy(db.provider),
                 })
+            }
+
+            if (db.views) {
+                let views = db.views
+                    .map((v: any) => (typeof v === 'object' ? v : parseFile(v)))
+                    .flat()
+
+                views = views.map((v: any) => {
+                    if (v.extend) {
+                        const view = views.find((x: any) => x.name === v.extend)
+
+                        return merge({}, view, v)
+                    }
+
+                    return v
+                })
+
+                db.views = views
             }
         }
 
