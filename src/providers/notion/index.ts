@@ -77,7 +77,7 @@ export function createNotionProvider() {
                 start_cursor: pagination.start_cursor,
             }
 
-            if (where) {
+            if (where && Object.keys(where).length) {
                 // console.log('notion.where', JSON.stringify(where, null, 2))
                 body.filter = parseWhere(where, properties)
                 // console.log('notion.filter', JSON.stringify(body.filter, null, 2))

@@ -63,9 +63,9 @@ export function createFileProvider(providerConfig: ProviderConfig) {
                 const content = await drive.read(filename)
 
                 const item: any = {
-                    _id: file.replace(`.${ext}`, ''),
-                    _filename: filename,
-                    _raw: content,
+                    id: file.replace(`.${ext}`, ''),
+                    filename: filename,
+                    raw: content,
                 }
 
                 Object.assign(item, parse(content))
@@ -81,13 +81,6 @@ export function createFileProvider(providerConfig: ProviderConfig) {
 
             if (exclude?.length && !include?.length) {
                 items = items.map((item) => omit(item, exclude))
-            }
-
-            // exclude properties with underscore
-            if (items.length && !include && !exclude) {
-                const keys = Object.keys(items[0]).filter((k) => k !== '_id' && k.startsWith('_'))
-
-                items = items.map((item) => omit(item, keys))
             }
 
             const total = items.length

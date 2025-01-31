@@ -1,6 +1,5 @@
 import { InferOutput } from 'valibot'
 import { vWithExtras as v } from '../validator/index.js'
-import { providerSchema } from '../provider/schema.js'
 
 export interface DbConfig extends InferOutput<typeof dbConfigSchema> {}
 
@@ -14,7 +13,7 @@ export const dbSchema = v.object({
 
 export const dbConfigProvider = v.object({
     name: v.string(),
-    provider: v.pipe(v.function(), v.args(v.tuple([v.any()])), v.returns(providerSchema)),
+    provider: v.pipe(v.any()),
 })
 
 export const dbConfigSchema = v.object({

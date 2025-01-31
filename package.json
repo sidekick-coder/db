@@ -20,7 +20,7 @@
         "access": "public"
     },
     "bin": {
-        "db": "dist/cli.js"
+        "db": "index.js"
     },
     "exports": {
         "./api": {
@@ -75,6 +75,7 @@
         "@types/minimist": "^1.2.5",
         "cli-table3": "^0.6.5",
         "date-fns": "^4.1.0",
+        "dotenv": "^16.4.7",
         "fast-glob": "^3.3.3",
         "lodash-es": "^4.17.21",
         "minimist": "^1.2.8",

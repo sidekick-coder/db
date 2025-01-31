@@ -5,13 +5,12 @@ import { createInstance } from '@/core/api/index.js'
 import { print } from './utils/print.js'
 import { confirm } from '@inquirer/prompts'
 
-import { vWithExtras as v } from '@/core/validator/index.js'
+import { vWithExtras as v, validate } from '@/core/validator/index.js'
 import { all } from './providers/index.js'
 import { resolveConfig } from './core/config/resolveConfig.js'
 import { merge, mergeWith } from 'lodash-es'
 import { createRenderer } from './core/render/createRenderer.js'
 import consoleRender from './renders/console.js'
-import { parseFile } from './utils/vars.js'
 
 async function run() {
     const { _: allArgs, ...flags } = minimist(process.argv.slice(2))
@@ -46,6 +45,7 @@ async function run() {
 
     const options = { ...flags } as any
 
+    // aliases
     if (flags['w']) {
         options.where = flags['w']
     }
@@ -55,32 +55,18 @@ async function run() {
     }
 
     if (flags['d']) {
-        options.database = flags['d']
+        options.data = flags['d']
+    }
+
+    if (flags['db']) {
+        options.database = flags['db']
     }
 
     // handle vars flags
     const varsFlags = ['config', 'where', 'data', 'pagination', 'sort', 'render-options']
 
     for (const key of varsFlags) {
-        const value = Array.isArray(options[key]) ? options[key] : [options[key]]
-
-        if (!value.length) {
-            continue
-        }
-
-        let result = {}
-
-        value.forEach((item) => {
-            const vars = v.parse(v.extras.vars, item)
-
-            result = mergeWith(result, vars, (objValue, srcValue) => {
-                if (Array.isArray(objValue)) {
-                    return objValue.concat(srcValue)
-                }
-            })
-        })
-
-        options[key] = result
+        options[key] = validate((v) => v.extras.vars, flags[key] || {})
     }
 
     // where shortcuts
@@ -102,20 +88,20 @@ async function run() {
     const dbName = options.database || config.default_database
 
     const db = instance.use(dbName)
-    const databaseDefintion = config.databases.find((db) => db.name === dbName)
+    const databaseDefinition = config.databases.find((db) => db.name === dbName)
     const renderName = options.render || 'console'
     const render = createRenderer({
         renders: config.renders,
     })
 
     // view
-    if (!options.view && databaseDefintion.default_view) {
-        options.view = databaseDefintion.default_view
+    if (!options.view && databaseDefinition.default_view) {
+        options.view = databaseDefinition.default_view
     }
 
     if (options.view) {
         // try to find view in list
-        const view = databaseDefintion.views.find((v) => v.name === options.view)
+        const view = databaseDefinition?.views?.find((v) => v.name === options.view)
 
         // if not found, try to parse file
         if (!view) {

@@ -67,7 +67,7 @@ export function createFolderProvider(drive: Drive) {
 
         const list: DataProvider['list'] = async (options) => {
             const where = options?.where || {}
-            const exclude = options?.exclude || ['_raw', '_filename', '_folder', '_body']
+            const exclude = options?.exclude || []
             const include = options?.include || []
             const limit = options?.pagination?.limit
             const page = options?.pagination?.page || 1
@@ -84,9 +84,9 @@ export function createFolderProvider(drive: Drive) {
                 const raw = await drive.read(resolve(path, file, `index.${parser.ext}`))
 
                 const item = {
-                    _id: file.replace(`.${parser.ext}`, ''),
-                    _folder: resolve(path, file),
-                    _raw: raw,
+                    id: file.replace(`.${parser.ext}`, ''),
+                    folder: resolve(path, file),
+                    raw: raw,
                 }
 
                 Object.assign(item, parser.parse(raw))

@@ -13,13 +13,13 @@ const vars = v.optional(
                 return value
             }
 
-            if (value.endsWith('.json')) {
+            if (/\.json$/.test(value)) {
                 return readJson(value.replace(/^@/, ''), {
                     transformRelativePaths: true,
                 })
             }
 
-            if (value.endsWith('.yml') || value.endsWith('.yaml')) {
+            if (/\.(yml|yaml)$/.test(value)) {
                 const file = value.replace(/^@/, '')
                 const folder = dirname(file)
 
@@ -88,13 +88,16 @@ export interface ValibotWithExtras extends Valibot {
     extras: typeof extras
 }
 
-export interface ValidatorCallback<T extends v.BaseSchema<unknown,unknown, v.BaseIssue<unknown>>> {
+export interface ValidatorCallback<T extends v.BaseSchema<unknown, unknown, v.BaseIssue<unknown>>> {
     (_v: ValibotWithExtras): T
 }
 
 export type ValidatorResult<T extends v.ObjectEntries> = v.InferOutput<v.ObjectSchema<T, undefined>>
 
-export function validate<T extends v.BaseSchema<unknown,unknown, v.BaseIssue<unknown>>>(cb: ValidatorCallback<T>, payload: any) {
+export function validate<T extends v.BaseSchema<unknown, unknown, v.BaseIssue<unknown>>>(
+    cb: ValidatorCallback<T>,
+    payload: any
+) {
     const schema = cb({
         ...v,
         extras,

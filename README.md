@@ -16,43 +16,29 @@ npm install -g @sidekick-coder/db
 
 ## Simple usage
 
+Create db.config.yml
+
+```yaml
+default_database: tasks
+databases:
+    - name: tasks
+      provider: markdown
+      config:
+        path: ./tasks-folder # path to the folder with markdown files
+```
+
 ```bash
-db list --provider markdown --config "path=tasks-folder"  --where status=done
+db list --where status=done # list 
 
-# or with db.config.yml
+db find --where id=01 # find single item
 
-db list --where status=done
+db create --data "title=New task&status=todo&body=This is a new task" # create new item
+
+db update --data "status=done" --where id=01 # update item
+
+db destroy --where id=01 # delete item
 ```
 
-File: tasks-foder/01.md
-```md 
----
-title: Todo 1
-status: done
----
-
-Context about the task
-```
-
-Output:
-
-```
-┌───────────────────┬──────────────────────┐
-│ total             | 20                   │
-├───────────────────┼──────────────────────┤
-│ limit             |                      │
-├───────────────────┼──────────────────────┤
-│ total_pages       | 1                    │
-└───────────────────┴──────────────────────┘
-
-┌───────────────────┬───────────────────────┬──────────────┐
-│ _id               |    title              │ status       |
-├───────────────────┼───────────────────────┤──────────────┤
-│ 01                | Todo 1                | done         │
-├───────────────────┼───────────────────────┼──────────────┤
-│ 02                | Todo 2                │ todo         │
-└───────────────────┴───────────────────────┴──────────────┘
-```
 
 ## Providers 
 
@@ -63,29 +49,29 @@ Output:
 
 ## Database
 
-A database in the context of this lib refers to a list of items that can or cannot have strict structure.
+A database in the context of this lib refers to any data that can be converted to an array of objects.
 
 Examples can be:
 
-- list of plain text files
-- list of markdown file
+- list of plain text files with key value pairs
+- list of markdown file with frontmatter
 - list of json files
 - list of folders
 - list of rows from a SQL Table (Postgres, MySQL, etc)
 - etc...
 
-Basically, any data that can be converted to an array of objects with properties can be considered a database in this context.
+
 
 ## Config file
 
-This is a file to make it easier to manage register and configure multiple databases and not have to pass the provider and config every time in the cli.
+The config file helps to use and manage your databases
 
 The files are searched in the following order:
 
 - `$HOME/.config/db/config.yml`
 - `$PWD/db.config.yml`
-- `$PWD/.db.config.yaml`
-- `$PWD/.db.config.json`
+- `$PWD/db.config.yaml`
+- `$PWD/db.config.json`
 
 If you want to use a different name, you can pass the file path as a flag in the cli.
 
@@ -105,6 +91,16 @@ databases:
       provider: markdown
       config:
         path: /data/notes
+      default_view: todo_tasks
+      views:
+        - name: done_tasks
+          where:
+            status: done
+        - name: todo_tasks
+          where:
+            status: todo
+        - "all_tasks.yml" # load from file
+        - "views/*.yml" # load all files in folder
 
     - name: my_sql_db
       provider: sql
@@ -301,11 +297,14 @@ db list --where '{"path": "data"}'
 
 ## Views 
 
-You can declare a view in a file to be more easy to use in the cli
+Views are predefined options to filter, sort and format data
 
 ```yaml
- # properties to include
+# only query filter in query
 include: [id, title, status]
+
+# exclude properties
+exclude: [body]
 
 # sort by
 sort-by: id
@@ -314,22 +313,49 @@ sort-desc: true
 # where statments
 where: 
     status: done
+
+render: console # render to use
+render_options:
+    columns:
+        - label: ID
+          value: _id
+          width: 3 # 3% terminal width
+
+        - label: Status
+          value: status
+          width: 10 # 10% terminal width
+
+        - label: Project
+          value: project
+          width: 10 # 10% terminal width
+
+        - label: Title
+          value: title
+          # auto width, fill the rest of the terminal width
 ```
 
 ```bash
+# load by name
+db list --view "done-tasks"
+
+# load by file
 db list --view "done-tasks.yml"
-
-# or short version 
-
-db list -v "done-tasks.yml"
 ```
 
-## Output format 
+## Renders [WIP]
 
-You can change the output format using the `--format` flag
+Renders are the ways you can display the data 
 
-```bash 
-db list --format json # json | yaml format
+It can be a console.log in the terminal, or open a browser with a table.
+
+You can declare them in the config file or in the cli
+
+```yaml
+# db.config.yml
+default_render: ui
+renders:
+    - name: ui
+      render: "/home/{username}/db-renders/ui.js"   
 ```
 
 ## Programatic usage 

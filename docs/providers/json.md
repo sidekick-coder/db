@@ -15,9 +15,9 @@ This are properties that are defined after the items are loaded and they are hid
 
 | name | Type | Description |
 | --- | --- | --- |
-| _id | `string` | folder basename treated as id
-| _filename | `string` | file absolute path
-| _raw | `string` | string content of the file
+| id | `string` | folder basename treated as id
+| filename | `string` | file absolute path
+| raw | `string` | string content of the file
 
 ### Cli
 
