@@ -11,6 +11,7 @@ import { resolveConfig } from './core/config/resolveConfig.js'
 import { merge, mergeWith } from 'lodash-es'
 import { createRenderer } from './core/render/createRenderer.js'
 import consoleRender from './renders/console.js'
+import { parseFile } from './utils/vars.js'
 
 async function run() {
     const { _: allArgs, ...flags } = minimist(process.argv.slice(2))
@@ -101,11 +102,11 @@ async function run() {
 
     if (options.view) {
         // try to find view in list
-        const view = databaseDefinition?.views?.find((v) => v.name === options.view)
+        let view = databaseDefinition?.views?.find((v) => v.name === options.view)
 
         // if not found, try to parse file
         if (!view) {
-            //view = parseFile(options.view)
+            view = parseFile(options.view)
         }
 
         options.view = view
