@@ -17,22 +17,13 @@ interface Options {
 }
 
 function createModuleProxy(filename: string) {
-    let value: any
+    return (options: any) => {
+        const module = require(filename)
 
-    const url = pathToFileURL(resolve(filename))
+        const provider = module.default(options)
 
-    return new Proxy(
-        {},
-        {
-            get(_, key) {
-                if (!value) {
-                    value = require(url.href)
-                }
-
-                return value[key]
-            },
-        }
-    )
+        return provider
+    }
 }
 
 export async function resolveConfig(options: Options) {

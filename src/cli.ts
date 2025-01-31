@@ -2,19 +2,29 @@
 import minimist from 'minimist'
 import { resolve } from 'path'
 import { createInstance } from '@/core/api/index.js'
-import { print } from './utils/print.js'
 import { confirm } from '@inquirer/prompts'
 
 import { vWithExtras as v, validate } from '@/core/validator/index.js'
 import { all } from './providers/index.js'
 import { resolveConfig } from './core/config/resolveConfig.js'
-import { merge, mergeWith } from 'lodash-es'
+import { merge } from 'lodash-es'
 import { createRenderer } from './core/render/createRenderer.js'
 import consoleRender from './renders/console.js'
 import { parseFile } from './utils/vars.js'
 
 async function run() {
-    const { _: allArgs, ...flags } = minimist(process.argv.slice(2))
+    const { _: allArgs, ...flags } = minimist(process.argv.slice(2), {
+        string: ['db-config', 'where', 'view', 'data', 'database', 'render'],
+        alias: {
+            'db-config': 'c',
+            'where': 'w',
+            'view': 'v',
+            'data': 'd',
+            'database': 'db',
+            'render': 'r',
+            'render-options': 'ro',
+        },
+    })
 
     const [name] = allArgs
 
@@ -45,23 +55,6 @@ async function run() {
     })
 
     const options = { ...flags } as any
-
-    // aliases
-    if (flags['w']) {
-        options.where = flags['w']
-    }
-
-    if (flags['v']) {
-        options.view = flags['v']
-    }
-
-    if (flags['d']) {
-        options.data = flags['d']
-    }
-
-    if (flags['db']) {
-        options.database = flags['db']
-    }
 
     // handle vars flags
     const varsFlags = ['config', 'where', 'data', 'pagination', 'sort', 'render-options']
