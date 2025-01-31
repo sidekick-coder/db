@@ -9,6 +9,8 @@ import { vWithExtras as v } from '@/core/validator/index.js'
 import { all } from './providers/index.js'
 import { resolveConfig } from './core/config/resolveConfig.js'
 import { merge, mergeWith } from 'lodash-es'
+import { createRenderer } from './core/render/createRenderer.js'
+import consoleRender from './renders/console.js'
 
 async function run() {
     const { _: allArgs, ...flags } = minimist(process.argv.slice(2))
@@ -32,11 +34,13 @@ async function run() {
     const config = await resolveConfig({
         files,
         providers: all,
+        renders: [consoleRender],
     })
 
     const instance = createInstance({
         databases: config.databases,
         providers: config.providers,
+        renders: config.renders,
     })
 
     const options = { ...flags } as any
@@ -54,7 +58,7 @@ async function run() {
     }
 
     // handle vars flags
-    const varsFlags = ['config', 'where', 'data', 'pagination', 'sort', 'view']
+    const varsFlags = ['config', 'where', 'data', 'pagination', 'sort', 'view', 'render-options']
 
     for (const key of varsFlags) {
         const value = Array.isArray(options[key]) ? options[key] : [options[key]]
@@ -99,49 +103,46 @@ async function run() {
         options.pagination = options.pagination || options.view.pagination
         options.include = options.include || options.view.include
         options.exclude = options.exclude || options.view.exclude
+        options.render = options.render || options.view.render
+        options['render-options'] = merge(options['render-options'], options.view['render_options'])
     }
 
     const db = instance.use(options.database || config.default_database)
+    const renderName = options.render || 'console'
+    const render = createRenderer({
+        renders: config.renders,
+    })
+
+    console.log(options)
 
     if (name == 'list') {
         const response = await db.list(options)
 
-        if (['json', 'yaml'].includes(options.format)) {
-            return print(response, {
-                format: options.format,
-            })
-        }
-
-        print(response.meta)
-
-        print(response.data, {
-            format: options.format,
-            vertical: !!options['print-vertical'],
+        return render(renderName, {
+            method: 'list',
+            output: response,
+            options: options['render-options'],
         })
-
-        return
     }
 
     if (name == 'find') {
         const response = await db.find(options)
 
-        print(response, {
-            format: options.format,
-            vertical: !!options['print-vertical'],
+        return render(renderName, {
+            method: 'find',
+            output: response,
+            options: options['render-options'],
         })
-
-        return
     }
 
     if (name == 'create') {
         const response = await db.create(options)
 
-        print(response, {
-            format: options.format,
-            vertical: !!options['print-vertical'],
+        return render(renderName, {
+            method: 'create',
+            output: response,
+            options: options['render-options'],
         })
-
-        return
     }
 
     if (name == 'update') {
@@ -157,12 +158,11 @@ async function run() {
 
         const response = await db.update(options)
 
-        print(response, {
-            format: options.format,
-            vertical: !!options['print-vertical'],
+        return render(renderName, {
+            method: 'update',
+            output: response,
+            options: options['render-options'],
         })
-
-        return
     }
 
     if (name === 'method') {
@@ -175,12 +175,11 @@ async function run() {
 
         const response = await db.method(options.name, args)
 
-        print(response, {
-            format: options.format,
-            vertical: !!options['print-vertical'],
+        return render(renderName, {
+            method: 'method',
+            output: response,
+            options: options['render-options'],
         })
-
-        return
     }
 
     if (['destroy', 'delete'].includes(name)) {
@@ -196,9 +195,11 @@ async function run() {
 
         const response = await db.destroy(options)
 
-        print(response, options.format)
-
-        return
+        return render(renderName, {
+            method: 'destroy',
+            output: response,
+            options: options['render-options'],
+        })
     }
 
     console.error('Command not found')

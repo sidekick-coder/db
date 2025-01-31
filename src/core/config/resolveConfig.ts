@@ -11,6 +11,7 @@ interface Options {
     default_database?: string
     databases?: DbConfig['databases']
     providers?: DbConfig['providers']
+    renders?: DbConfig['renders']
 }
 
 function createModuleProxy(filename: string) {
@@ -37,6 +38,7 @@ export async function resolveConfig(options: Options) {
         default_database: options.default_database,
         databases: options.databases || [],
         providers: options.providers || [],
+        renders: options.renders || [],
     }
 
     for await (const file of options.files) {
@@ -48,7 +50,7 @@ export async function resolveConfig(options: Options) {
             result.default_database = content.default_database
         }
 
-        for await (const p of content?.providers || []) {
+        for (const p of content?.providers || []) {
             if (/\.(js|ts)$/.test(p.provider)) {
                 result.providers.push({
                     name: p.name,
@@ -57,13 +59,22 @@ export async function resolveConfig(options: Options) {
             }
         }
 
-        for await (const db of content?.databases || []) {
+        for (const db of content?.databases || []) {
             result.databases.push(db)
 
             if (/\.(js|ts)$/.test(db.provider)) {
                 result.providers.push({
                     name: db.provider,
                     provider: createModuleProxy(db.provider),
+                })
+            }
+        }
+
+        for (const r of content?.renders || []) {
+            if (/\.(js|ts)$/.test(r.render)) {
+                result.renders.push({
+                    name: r.name,
+                    provider: createModuleProxy(r.render),
                 })
             }
         }

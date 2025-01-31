@@ -22,6 +22,7 @@ export const dbConfigSchema = v.object({
         v.transform((v) => (Array.isArray(v) ? v : [v])),
         v.array(dbSchema)
     ),
+    renders: v.optional(v.array(v.any()), []),
 })
 
 export const common = {
@@ -75,7 +76,7 @@ export function transformWhere(where: any) {
     }
 
     if (!result.and.length) {
-        delete result.and 
+        delete result.and
     }
 
     return result
