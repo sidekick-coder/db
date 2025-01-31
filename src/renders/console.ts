@@ -18,7 +18,7 @@ function general(output: any) {
 }
 
 function list(output: any, columns?: any[]) {
-    const screenWidth = (process.stdout.columns || 80) - 5
+    const screenWidth = (process.stdout.columns || 80) - 6
     const rows = [] as string[][]
     const head: any = []
 
@@ -31,11 +31,10 @@ function list(output: any, columns?: any[]) {
             .map((item: any) => Object.keys(item))
             .flat()
             .filter((value, index, self) => self.indexOf(value) === index)
-            .forEach((key, i, array) => {
+            .forEach((key) => {
                 head.push({
                     label: key,
                     value: key,
-                    width: Math.floor(screenWidth / array.length),
                 })
             })
     }
@@ -60,7 +59,7 @@ function list(output: any, columns?: any[]) {
         }
     })
 
-    const usedWidth = head.filter((h) => h.width).reduce((acc, h) => acc + h.width, 0)
+    const usedWidth = head.filter((h) => !!h.width).reduce((acc, h) => acc + h.width, 0)
     const remainingWidth = 100 - usedWidth
     const withNoWidth = head.filter((h) => !h.width).length
 
