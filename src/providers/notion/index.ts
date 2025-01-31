@@ -6,7 +6,7 @@ import { InferOutput } from 'valibot'
 import omit from 'lodash-es/omit.js'
 import pick from 'lodash-es/pick.js'
 import { merge } from 'lodash-es'
-import { toDataItem, toNotionFilter, toNotionObject } from './parse.js'
+import { toDataItem, toNotionObject } from './parse.js'
 import { tryCatch } from '@/utils/tryCatch.js'
 import { parseWhere } from './parseWhere.js'
 

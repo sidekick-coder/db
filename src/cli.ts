@@ -8,8 +8,7 @@ import { confirm } from '@inquirer/prompts'
 import { vWithExtras as v } from '@/core/validator/index.js'
 import { all } from './providers/index.js'
 import { resolveConfig } from './core/config/resolveConfig.js'
-import { defaultsDeep, merge, mergeWith } from 'lodash-es'
-import { where } from './core/api/schemas.js'
+import { merge, mergeWith } from 'lodash-es'
 
 async function run() {
     const { _: allArgs, ...flags } = minimist(process.argv.slice(2))
@@ -58,7 +57,7 @@ async function run() {
     const varsFlags = ['config', 'where', 'data', 'pagination', 'sort', 'view']
 
     for (const key of varsFlags) {
-        let value = Array.isArray(options[key]) ? options[key] : [options[key]]
+        const value = Array.isArray(options[key]) ? options[key] : [options[key]]
 
         if (!value.length) {
             continue
@@ -77,7 +76,6 @@ async function run() {
         })
 
         options[key] = result
-
     }
 
     // where shortcuts
@@ -85,7 +83,7 @@ async function run() {
     if (!options.where.and) {
         options.where.and = []
     }
-    if(flags['where-in']) {
+    if (flags['where-in']) {
         const [field, value] = flags['where-in'].split('=')
 
         options.where.and.push({

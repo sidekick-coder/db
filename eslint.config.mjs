@@ -12,6 +12,7 @@ export default [
     {
         rules: {
             'markdown/no-missing-label-refs': 'off',
+            'linebreak-style': 'off',
         },
     },
 ]

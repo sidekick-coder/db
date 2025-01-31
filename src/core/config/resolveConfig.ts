@@ -2,12 +2,34 @@ import { readConfig } from '@/utils/filesystem.js'
 import { DbConfig } from '../api/schemas.js'
 import { resolve } from 'path'
 import { pathToFileURL } from 'url'
+import { createRequire } from 'module'
+
+const require = createRequire(import.meta.url)
 
 interface Options {
     files: string[]
     default_database?: string
     databases?: DbConfig['databases']
     providers?: DbConfig['providers']
+}
+
+function createModuleProxy(filename: string) {
+    let value: any
+
+    const url = pathToFileURL(resolve(filename))
+
+    return new Proxy(
+        {},
+        {
+            get(_, key) {
+                if (!value) {
+                    value = require(url.href)
+                }
+
+                return value[key]
+            },
+        }
+    )
 }
 
 export async function resolveConfig(options: Options) {
@@ -27,14 +49,10 @@ export async function resolveConfig(options: Options) {
         }
 
         for await (const p of content?.providers || []) {
-            if (p.provider.endsWith('.js')) {
-                const url = pathToFileURL(resolve(p.provider))
-
-                const pModule = await import(url.href)
-
+            if (/\.(js|ts)$/.test(p.provider)) {
                 result.providers.push({
                     name: p.name,
-                    provider: pModule.default,
+                    provider: createModuleProxy(p.provider),
                 })
             }
         }
@@ -42,14 +60,10 @@ export async function resolveConfig(options: Options) {
         for await (const db of content?.databases || []) {
             result.databases.push(db)
 
-            if (db.provider.endsWith('.js')) {
-                const url = pathToFileURL(resolve(db.provider))
-
-                const pModule = await import(url.href)
-
+            if (/\.(js|ts)$/.test(db.provider)) {
                 result.providers.push({
                     name: db.provider,
-                    provider: pModule.default,
+                    provider: createModuleProxy(db.provider),
                 })
             }
         }

@@ -2,7 +2,7 @@
 
 # db
 
-A simple cli to manage your data  
+A simple tool to manage your data  
 [npm](https://www.npmjs.com/package/@sidekick-coder/compositor)
 
 </div>
@@ -22,6 +22,36 @@ db list --provider markdown --config "path=tasks-folder"  --where status=done
 # or with db.config.yml
 
 db list --where status=done
+```
+
+File: tasks-foder/01.md
+```md 
+---
+title: Todo 1
+status: done
+---
+
+Context about the task
+```
+
+Output:
+
+```
+┌───────────────────┬──────────────────────┐
+│ total             | 20                   │
+├───────────────────┼──────────────────────┤
+│ limit             |                      │
+├───────────────────┼──────────────────────┤
+│ total_pages       | 1                    │
+└───────────────────┴──────────────────────┘
+
+┌───────────────────┬───────────────────────┬──────────────┐
+│ _id               |    title              │ status       |
+├───────────────────┼───────────────────────┤──────────────┤
+│ 01                | Todo 1                | done         │
+├───────────────────┼───────────────────────┼──────────────┤
+│ 02                | Todo 2                │ todo         │
+└───────────────────┴───────────────────────┴──────────────┘
 ```
 
 ## Providers 

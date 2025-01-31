@@ -1,3 +1,4 @@
+import { dirname } from 'path'
 import { Drive } from './types.js'
 import { promises as fs } from 'fs'
 
@@ -41,10 +42,20 @@ export const drive: Drive = {
 
         return fs.readFile(path, 'utf-8')
     },
-    write: (path, content) => {
+    write: async (path, content, options) => {
+        if (options?.recursive) {
+            await drive.mkdir(dirname(path))
+        }
+
         return fs.writeFile(path, content, 'utf-8')
     },
-    mkdir: (path) => {
+    mkdir: async (path, options) => {
+        if (await drive.exists(path)) return
+
+        if (options?.recursive) {
+            await drive.mkdir(dirname(path))
+        }
+
         return fs.mkdir(path)
     },
     destroy: (path) => {

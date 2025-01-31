@@ -47,7 +47,9 @@ export function createIncrementalStategyFromFile(drive: Drive, filename: string)
         setLast: async (last: number) => {
             const content = JSON.stringify({ last_id: last }, null, 4)
 
-            await drive.write(filename, content)
+            await drive.write(filename, content, {
+                recursive: true,
+            })
         },
     })
 }
