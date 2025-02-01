@@ -145,7 +145,7 @@ export function createFolderProvider(drive: Drive) {
 
             await drive.write(filename, parser.stringify(data))
 
-            const item = await find({ where: { _id: String(id) } })
+            const item = await find({ where: { id: String(id) } })
 
             return item!
         }
@@ -154,7 +154,7 @@ export function createFolderProvider(drive: Drive) {
             const { data: items } = await list({ where })
 
             for (const item of items) {
-                const filename = resolve(path, item._id, `index.${parser.ext}`)
+                const filename = resolve(path, item.id, `index.${parser.ext}`)
 
                 await drive.write(filename, parser.stringify(data))
             }

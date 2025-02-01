@@ -130,7 +130,7 @@ export function createFileProvider(providerConfig: ProviderConfig) {
             await drive.write(filename, content)
 
             return {
-                _id: id,
+                id: id,
                 ...properties,
             }
         }
@@ -139,7 +139,7 @@ export function createFileProvider(providerConfig: ProviderConfig) {
             const { data: items } = await list({ where, exclude: [] })
 
             for (const item of items) {
-                const filename = resolve(path, `${item._id}.${ext}`)
+                const filename = resolve(path, `${item.id}.${ext}`)
 
                 const hideKeys = Object.keys(item).filter((k) => k.startsWith('_'))
 

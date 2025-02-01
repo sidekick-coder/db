@@ -318,7 +318,7 @@ render: console # render to use
 render_options:
     columns:
         - label: ID
-          value: _id
+          value: id
           width: 3 # 3% terminal width
 
         - label: Status

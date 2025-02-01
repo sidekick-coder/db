@@ -12,34 +12,36 @@ interface Options {
     config?: any
 }
 
+type BaseOptions<T> = Omit<T, 'provider'>
+
 export function createDatabase(options: Options) {
     const instance = options.provider(options.config)
 
-    function list(payload?: Omit<ListOptions, 'provider'>) {
+    function list(payload?: BaseOptions<ListOptions>) {
         const options = baseOptions(payload)
 
         return baseList(options)
     }
 
-    function find(payload: Omit<FindOptions, 'dbConfig'>) {
+    function find(payload: BaseOptions<FindOptions>) {
         const options = baseOptions(payload)
 
         return baseFind(options)
     }
 
-    function create(payload: Omit<CreateOptions, 'dbConfig'>) {
+    function create(payload: BaseOptions<CreateOptions>) {
         const options = baseOptions(payload)
 
         return baseCreate(options)
     }
 
-    function update(payload: Omit<UpdateOptions, 'dbConfig'>) {
+    function update(payload: BaseOptions<UpdateOptions>) {
         const options = baseOptions(payload)
 
         return baseUpdate(options)
     }
 
-    function destroy(payload: Omit<DestroyOptions, 'dbConfig'>) {
+    function destroy(payload: BaseOptions<DestroyOptions>) {
         const options = baseOptions(payload)
 
         return baseDestroy(options)
