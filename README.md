@@ -4,7 +4,7 @@
 
 A simple tool to manage your data  
 [npm](https://www.npmjs.com/package/@sidekick-coder/compositor)
-
+> [!DANGER] The project is in alpha phase, please don't use in production
 </div>
 
 
