@@ -1,9 +1,19 @@
-import { provider } from '@/providers/file/index.js'
+import * as file from '@/providers/file/index.js'
+import * as folder from '@/providers/folder/index.js'
+import * as notion from '@/providers/notion/index.js'
 
 const providers = [
     {
         name: 'file',
-        provider: provider,
+        provider: file.provider,
+    },
+    {
+        name: 'folder',
+        provider: folder.provider,
+    },
+    {
+        name: 'notion',
+        provider: notion.provider,
     },
 ]
 
