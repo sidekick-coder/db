@@ -3,7 +3,7 @@
 # db
 
 A simple tool to manage your data  
-[npm](https://www.npmjs.com/package/@sidekick-coder/compositor)
+[npm](https://www.npmjs.com/package/@sidekick-coder/db)
 > [!DANGER] The project is in alpha phase, please don't use in production
 </div>
 
