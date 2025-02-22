@@ -13,4 +13,4 @@ const base = {
 
 export const providerSchema = v.objectWithRest(base, v.any())
 
-export type ProviderSchema = InferOutput<typeof providerSchema>
+export type Provider = InferOutput<typeof providerSchema>

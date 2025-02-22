@@ -1,6 +1,6 @@
 import sift from 'sift'
 import { Where, WhereCondition } from './types.js'
-import { transformWhere } from '../api/schemas.js'
+import { transformWhere } from '@/core/database/where.js'
 
 const operatorMap = {
     eq: '$eq',

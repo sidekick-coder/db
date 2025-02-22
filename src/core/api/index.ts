@@ -2,6 +2,8 @@ import { vWithExtras as v } from '../validator/index.js'
 import { DbConfig, dbConfigSchema } from './schemas.js'
 import { createDatabase } from '../database/index.js'
 
+export type Instance = ReturnType<typeof createInstance>
+
 export function createInstance(payload: DbConfig) {
     const config = v.parse(dbConfigSchema, payload)
 

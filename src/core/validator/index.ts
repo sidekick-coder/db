@@ -1,59 +1,7 @@
-import { readJson, readYaml } from '@/utils/filesystem.js'
 import * as v from 'valibot'
-import qs from 'qs'
-import { dirname, resolve } from 'path'
+import { schema as vars } from './vars.js'
 
 type Valibot = typeof v
-
-const vars = v.optional(
-    v.pipe(
-        v.any(),
-        v.transform((value) => {
-            if (typeof value == 'object') {
-                return value
-            }
-
-            if (/\.json$/.test(value)) {
-                return readJson(value.replace(/^@/, ''), {
-                    transformRelativePaths: true,
-                })
-            }
-
-            if (/\.(yml|yaml)$/.test(value)) {
-                const file = value.replace(/^@/, '')
-                const folder = dirname(file)
-
-                return readYaml(value.replace(/^@/, ''), {
-                    reviver: (_key: any, value: any) => {
-                        // fix relative paths
-                        if (typeof value == 'string' && value.startsWith('./')) {
-                            return resolve(folder, value)
-                        }
-
-                        return value
-                    },
-                })
-            }
-
-            if (typeof value == 'string' && value.includes('=')) {
-                const result = qs.parse(value, { allowEmptyArrays: true })
-
-                return result as Record<string, any>
-            }
-
-            if (typeof value == 'string' && value.startsWith('{')) {
-                return JSON.parse(value)
-            }
-
-            if (typeof value == 'string' && value.startsWith('[')) {
-                return JSON.parse(value)
-            }
-
-            return value
-        }),
-        v.record(v.string(), v.any())
-    )
-)
 
 const stringList = v.pipe(
     v.any(),
@@ -68,6 +16,7 @@ const stringList = v.pipe(
     }),
     v.array(v.string())
 )
+
 const extras = {
     vars,
     stringList,
@@ -94,14 +43,27 @@ export interface ValidatorCallback<T extends v.BaseSchema<unknown, unknown, v.Ba
 
 export type ValidatorResult<T extends v.ObjectEntries> = v.InferOutput<v.ObjectSchema<T, undefined>>
 
-export function validate<T extends v.BaseSchema<unknown, unknown, v.BaseIssue<unknown>>>(
-    cb: ValidatorCallback<T>,
-    payload: any
-) {
-    const schema = cb({
-        ...v,
-        extras,
-    })
+export type ValibotSchema = v.BaseSchema<unknown, unknown, v.BaseIssue<unknown>>
 
-    return v.parse(schema, payload)
+export function validate<T extends ValibotSchema>(cb: ValidatorCallback<T> | T, payload: any) {
+    let schema: T
+
+    if (typeof cb === 'function') {
+        schema = cb(vWithExtras)
+    } else {
+        schema = cb
+    }
+
+    const { output, issues, success } = v.safeParse(schema, payload)
+
+    if (!success) {
+        const error = new Error('Validation failed')
+        const details = issues ? v.flatten(issues) : undefined
+
+        Object.assign(error, { details })
+
+        throw error
+    }
+
+    return output
 }

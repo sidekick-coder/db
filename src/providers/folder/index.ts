@@ -69,8 +69,8 @@ export function createFolderProvider(drive: Drive) {
             const where = options?.where || {}
             const exclude = options?.exclude || []
             const include = options?.include || []
-            const limit = options?.pagination?.limit
-            const page = options?.pagination?.page || 1
+            const limit = options?.limit
+            const page = options?.page || 1
 
             let files = await drive.list(path, { onlyDirs: true })
 
@@ -126,13 +126,15 @@ export function createFolderProvider(drive: Drive) {
         const find: DataProvider['find'] = async (options) => {
             const { data: items } = await list({
                 ...options,
-                pagination: { limit: 1 },
+                limit: 1,
             })
 
             return items[0] || null
         }
 
-        const create: DataProvider['create'] = async (data) => {
+        const create: DataProvider['create'] = async (options) => {
+            const { data } = options
+
             const id = data.id || (await makeId(idStrategy, idOptions))
 
             if (await drive.exists(resolve(path, id))) {
@@ -150,8 +152,11 @@ export function createFolderProvider(drive: Drive) {
             return item!
         }
 
-        const update: DataProvider['update'] = async (data, where) => {
-            const { data: items } = await list({ where })
+        const update: DataProvider['update'] = async (options) => {
+            const { data, where } = options
+
+            const page = await list({ where })
+            const items = page.data
 
             for (const item of items) {
                 const filename = resolve(path, item.id, `index.${parser.ext}`)
@@ -162,11 +167,12 @@ export function createFolderProvider(drive: Drive) {
             return { count: items.length }
         }
 
-        const destroy: DataProvider['destroy'] = async (where) => {
-            const { data: items } = await list({ where, include: ['_folder'] })
+        const destroy: DataProvider['destroy'] = async (options) => {
+            const { where } = options
+            const { data: items } = await list({ where, include: ['folder'] })
 
             for (const item of items) {
-                await drive.destroy(item._folder)
+                await drive.destroy(item.folder)
             }
 
             return { count: items.length }

@@ -65,16 +65,17 @@ export function createNotionProvider() {
         }
 
         const list: DataProvider['list'] = async (options) => {
-            const pagination = v.parse(paginationSchema, options?.pagination || {})
             const where = options?.where
             const exclude = options?.exclude
             const include = options?.include
+            const limit = options?.limit || 100
+            const cursor = options?.cursor
 
             const properties = await findProperties()
 
             const body: any = {
-                page_size: pagination.page_size,
-                start_cursor: pagination.start_cursor,
+                page_size: limit,
+                start_cursor: cursor,
             }
 
             if (where && Object.keys(where).length) {
@@ -130,15 +131,15 @@ export function createNotionProvider() {
         const find: DataProvider['find'] = async (options) => {
             const { data: items } = await list({
                 ...options,
-                pagination: {
-                    page_size: 1,
-                },
+                limit: 1,
             })
 
             return items[0] || null
         }
 
-        const create: DataProvider['create'] = async (data) => {
+        const create: DataProvider['create'] = async (options) => {
+            const { data } = options
+
             const properties = await findProperties()
 
             const notionObject = toNotionObject(data, properties)
@@ -155,17 +156,19 @@ export function createNotionProvider() {
             return toDataItem(response)
         }
 
-        const update: DataProvider['update'] = async (payload, where) => {
-            const { data, meta } = await list({ where, exclude: [] })
+        const update: DataProvider['update'] = async (options) => {
+            const { data, where } = options
+            const page = await list({ where, exclude: [] })
+            const items = page.data
 
             const properties = await findProperties()
 
             let count = 0
 
-            for await (const item of data) {
+            for await (const item of items) {
                 count++
 
-                const notionObject = toNotionObject(payload, properties)
+                const notionObject = toNotionObject(data, properties)
 
                 await api(`pages/${item._id}`, {
                     method: 'PATCH',
@@ -173,16 +176,20 @@ export function createNotionProvider() {
                 })
             }
 
-            if (meta.has_more) {
-                const nextCount = await update!(payload, where)
-
-                count += nextCount.count
-            }
+            //if (page.meta.has_more) {
+            //    const nextCount = await update!({
+            //        ...options,
+            //        cursor: page.meta.next_cursor,
+            //    })
+            //
+            //    count += nextCount.count
+            //}
 
             return { count }
         }
 
-        const destroy: DataProvider['destroy'] = async (where) => {
+        const destroy: DataProvider['destroy'] = async (options) => {
+            const { where } = options
             const { data, meta } = await list({ where, exclude: [] })
 
             let count = 0
@@ -198,11 +205,11 @@ export function createNotionProvider() {
                 })
             }
 
-            if (meta.has_more) {
-                const nextCount = await destroy!(where)
-
-                count += nextCount.count
-            }
+            //if (meta.has_more) {
+            //    const nextCount = await destroy!(options)
+            //
+            //    count += nextCount.count
+            //}
 
             return { count }
         }

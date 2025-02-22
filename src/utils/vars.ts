@@ -1,5 +1,5 @@
 import fs from 'fs'
-import { where } from '@/core/api/schemas.js'
+import { schema as where } from '@/core/database/where.js'
 import { validate } from '@/core/validator/index.js'
 import { mergeWith } from 'lodash-es'
 import { YAML } from '@/core/parsers/yaml.js'
@@ -64,4 +64,3 @@ export function parseWhere(payload: any) {
 
     return validate(() => where, record)
 }
-

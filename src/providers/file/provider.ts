@@ -42,8 +42,8 @@ export function createFileProvider(providerConfig: ProviderConfig) {
             const where = options?.where || {}
             const exclude = options?.exclude
             const include = options?.include
-            const limit = options?.pagination?.limit
-            const page = options?.pagination?.page || 1
+            const limit = options?.limit
+            const page = options?.page || 1
 
             const files = await drive.list(path, {
                 onlyFiles: true,
@@ -110,13 +110,15 @@ export function createFileProvider(providerConfig: ProviderConfig) {
         const find: DataProvider['find'] = async (options) => {
             const { data: items } = await list({
                 ...options,
-                pagination: { limit: 1 },
+                limit: 1,
             })
 
             return items[0] || null
         }
 
-        const create: DataProvider['create'] = async (data) => {
+        const create: DataProvider['create'] = async (options) => {
+            const { data } = options
+
             const { id: explicitId, ...properties } = data
             const id = explicitId || (await makeId(idStrategy, idOptions))
             const filename = resolve(path, `${id}.${ext}`)
@@ -135,13 +137,15 @@ export function createFileProvider(providerConfig: ProviderConfig) {
             }
         }
 
-        const update: DataProvider['update'] = async (data, where) => {
+        const update: DataProvider['update'] = async (options) => {
+            const { where, data } = options
+
             const { data: items } = await list({ where, exclude: [] })
 
             for (const item of items) {
                 const filename = resolve(path, `${item.id}.${ext}`)
 
-                const hideKeys = Object.keys(item).filter((k) => k.startsWith('_'))
+                const hideKeys = ['id', 'filename', 'raw']
 
                 const properties = omit({ ...item, ...data }, hideKeys)
 
@@ -153,11 +157,12 @@ export function createFileProvider(providerConfig: ProviderConfig) {
             return { count: items.length }
         }
 
-        const destroy: DataProvider['destroy'] = async (where) => {
-            const { data: items } = await list({ where, include: ['_filename'] })
+        const destroy: DataProvider['destroy'] = async (options) => {
+            const { where } = options
+            const { data: items } = await list({ where, include: ['filename'] })
 
             for (const item of items) {
-                await drive.destroy(item._filename)
+                await drive.destroy(item.filename)
             }
 
             return { count: items.length }

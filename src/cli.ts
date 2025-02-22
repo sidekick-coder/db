@@ -122,6 +122,7 @@ async function run() {
             method: 'list',
             output: response,
             options: options['render-options'],
+            config: config,
         })
     }
 
@@ -132,6 +133,7 @@ async function run() {
             method: 'find',
             output: response,
             options: options['render-options'],
+            config,
         })
     }
 
@@ -142,6 +144,7 @@ async function run() {
             method: 'create',
             output: response,
             options: options['render-options'],
+            config,
         })
     }
 
@@ -162,6 +165,7 @@ async function run() {
             method: 'update',
             output: response,
             options: options['render-options'],
+            config,
         })
     }
 
@@ -179,6 +183,7 @@ async function run() {
             method: 'method',
             output: response,
             options: options['render-options'],
+            config,
         })
     }
 
@@ -199,10 +204,19 @@ async function run() {
             method: 'destroy',
             output: response,
             options: options['render-options'],
+            config,
         })
     }
 
     console.error('Command not found')
 }
 
-run()
+if (process.argv.includes('--debug')) {
+    console.time('cli')
+}
+
+run().finally(() => {
+    if (process.argv.includes('--debug')) {
+        console.timeEnd('cli')
+    }
+})

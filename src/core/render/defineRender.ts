@@ -2,6 +2,7 @@ export interface RenderParams {
     method: string
     output: any
     options: any
+    config: any
 }
 
 export interface Render {

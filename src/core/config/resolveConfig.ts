@@ -1,7 +1,5 @@
 import { readConfig } from '@/utils/filesystem.js'
 import { DbConfig } from '../api/schemas.js'
-import { resolve } from 'path'
-import { pathToFileURL } from 'url'
 import { createRequire } from 'module'
 import { parseFile } from '@/utils/vars.js'
 import { merge } from 'lodash-es'
@@ -28,6 +26,7 @@ function createModuleProxy(filename: string) {
 
 export async function resolveConfig(options: Options) {
     const result: any = {
+        cwd: process.cwd(),
         default_database: options.default_database,
         databases: options.databases || [],
         providers: options.providers || [],
@@ -85,7 +84,7 @@ export async function resolveConfig(options: Options) {
             if (/\.(js|ts)$/.test(r.render)) {
                 result.renders.push({
                     name: r.name,
-                    provider: createModuleProxy(r.render),
+                    render: createModuleProxy(r.render),
                 })
             }
         }

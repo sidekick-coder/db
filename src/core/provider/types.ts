@@ -1,4 +1,9 @@
-import { ProviderSchema } from './schema.js'
+import { CreateOptions } from '../database/create.js'
+import { DestroyOptions } from '../database/destroy.js'
+import { FindOptions } from '../database/find.js'
+import { UpdateOptions } from '../database/update.js'
+import { Provider } from './schema.js'
+import type { ListOptions } from '@/core/database/list.js'
 
 export interface WhereCondition {
     field: string
@@ -27,14 +32,6 @@ export interface Sort {
     sortDesc?: boolean | boolean[]
 }
 
-export interface ListOptions {
-    where?: Where
-    sort?: Sort
-    pagination?: any
-    exclude?: string[]
-    include?: string[]
-}
-
 export interface DataItem {
     [key: string]: any
 }
@@ -45,13 +42,13 @@ export interface ListResponse {
 }
 
 export interface DataProvider {
-    list?: (options?: ListOptions) => Promise<ListResponse>
-    find?: (where?: Where, field?: Field) => Promise<DataItem | null>
-    create?: (data: any) => Promise<DataItem>
-    update?: (data: any, where?: Where) => Promise<{ count: number }>
-    destroy?: (where?: Where) => Promise<{ count: number }>
+    list?: (options: ListOptions) => Promise<ListResponse>
+    find?: (options: FindOptions) => Promise<DataItem | null>
+    create?: (options: CreateOptions) => Promise<DataItem>
+    update?: (options: UpdateOptions) => Promise<{ count: number }>
+    destroy?: (options: DestroyOptions) => Promise<{ count: number }>
 }
 
 export interface MountDataProvider {
-    (config: any): ProviderSchema
+    (config: any): DataProvider
 }
