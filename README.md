@@ -14,36 +14,34 @@ A simple tool to manage your data
 npm install -g @sidekick-coder/db
 ```
 
-## Simple usage
+## Usage 
 
 Create db.config.yml
 
 ```yaml
-default_database: tasks
-databases:
-    - name: tasks
-      provider: markdown
-      config:
-        path: ./tasks-folder # path to the folder with markdown files
+name: tasks
+provider:
+  name: file
+  config:
+    format: markdown
+    path: ./tasks-folder # path to the folder with markdown files
 ```
 
 ```bash
-db list --where status=done # list 
+db list --where "status=done" # list 
 
-db find --where id=01 # find single item
+db find --where "id=01" # find single item
 
 db create --data "title=New task&status=todo&body=This is a new task" # create new item
 
-db update --data "status=done" --where id=01 # update item
+db update --data "status=done" --where "id=01" # update item
 
-db destroy --where id=01 # delete item
+db destroy --where "id=01" # delete item
 ```
-
 
 ## Providers 
 
-- [Markdown](./docs/providers/markdown.md)
-- [Json](./docs/providers/json.md)
+- [File](./docs/providers/file.md)
 - [Folder](./docs/providers/folder.md)
 - [Notion](./docs/providers/notion.md)
 
@@ -60,78 +58,67 @@ Examples can be:
 - list of rows from a SQL Table (Postgres, MySQL, etc)
 - etc...
 
-
-
 ## Config file
 
-The config file helps to use and manage your databases
+The config file is a yaml file that defines the one or more databases definitions.
 
-The files are searched in the following order:
+The cli will always look for a the `db.config.yml` file in the current directory, unless you pass a different path as a flag.
 
-- `$HOME/.config/db/config.yml`
-- `$PWD/db.config.yml`
-- `$PWD/db.config.yaml`
-- `$PWD/db.config.json`
-
-If you want to use a different name, you can pass the file path as a flag in the cli.
-
-```bash
-db --db-config "path/to/config.yml"
+```bash 
+db -f "path/to/config.yml"
 ```
 
-Config sample
+### Single Database config sample
 
 ```yaml 
-# database name to run by default
-default_database: my_notes 
+name: tasks
+provider:
+    name: file
+    config:
+        path: data
+        format: markdown
+        id_strategy: increment
+view:
+    default: default
+    sources:
+        dirs: views
+        files: [./views/default.yml]
+        items:
+            - name: archived
+              where:
+                  archived: false
+```
 
-# list of databases with provider and config
-databases: 
-    - name: my_notes
-      provider: markdown
-      config:
-        path: /data/notes
-      default_view: todo_tasks
-      views:
-        - name: done_tasks
-          where:
-            status: done
-        - name: todo_tasks
-          where:
-            status: todo
-        - "all_tasks.yml" # load from file
-        - "views/*.yml" # load all files in folder
+### Multiple Databases config sample
 
-    - name: my_sql_db
-      provider: sql
-      config:
-        dialect: postgres
-        host: localhost
-        port: 5432
-        user: user
-        password: password
-        database: my_db
+```yaml 
+databases:
+    default: tasks
+    sources:
+        files: ["content/tasks/db.config.yml"]
+        patterns: ["content/*/db.config.yml"]
+        items:
+            - name: tags
+              provider:
+                  name: file
+                  config:
+                      path: ./content/tags/data
 
-    - name: my_custom_provider_1
-      provider: ./my-custom-provider.js
-
-    - name: my_custom_provider_2 
-      provider: custom
-
-# register extra providers using custom js files
-providers:
-    - name:  custom
-      path: ./my-custom-provider.js
+            - name: code-snippets
+              provider:
+                  name: file
+                  config:
+                      path: content/code-snippets/data
 ```
 
 Select the databse with the `--database` flag
 
 ```bash
-db list --database my_notes
+db list --database tags
 
 # or short version 
 
-db list -d my_notes
+db list --db tags
 ```
 
 ## List
@@ -142,11 +129,14 @@ List items in the database
 
 | Option | Type | Required | Description |
 | --- | --- | --- | --- |
-| provider | `string` | if not usign config file | Provider name |
-| config | `object` | if not usign config file | Provider configuration |
 | where | `object` | `false` | Where statments to filter data [see filters](./docs/filters.md) |
+| limit | `number` | `false` | Limit the number of items if provider supports |
+| page | `number` | `false` | Page number if provider supports number pagination |
+| cursor | `string` | `false` | Cursor to start from if provider supports cursor pagination |
 | include | `array` | `false` | Include properties |
 | exclude | `array` | `false` | Exclude properties |
+| sort-by | `string` | `false` | Sort by property | 
+| sort-desc | `boolean` | `false` | Sort descending |
 
 ### Examples
 
@@ -166,8 +156,6 @@ Find a single item in the database
 
 | Option | Type | Required | Description |
 | --- | --- | --- | --- |
-| provider | `string` | if not usign config file | Provider name |
-| config | `object` | if not usign config file | Provider configuration |
 | where | `object` | `false` | Where statments to filter data [see filters](./docs/filters.md) |
 | include | `array` | `false` | Include properties |
 | exclude | `array` | `false` | Exclude properties |
@@ -190,8 +178,6 @@ Create a new item in the database
 
 | Option | Type | Required | Description |
 | --- | --- | --- | --- |
-| provider | `string` | if not usign config file | Provider name |
-| config | `object` | if not usign config file | Provider configuration |
 | data | `object` | `true` | Data to be updated |
 
 ### Examples
@@ -216,8 +202,6 @@ Update an item in the database
 
 | Option | Type | Required | Description |
 | --- | --- | --- | --- |
-| provider | `string` | if not usign config file | Provider name |
-| config | `object` | if not usign config file | Provider configuration |
 | data | `object` | `true` | Data to be updated |
 | where | `object` | `false` | Where statments to filter data [see filters](./docs/filters.md) |
 
@@ -245,8 +229,6 @@ Delete an item in the database
 
 | Option | Type | Required | Description |
 | --- | --- | --- | --- |
-| provider | `string` | if not usign config file | Provider name |
-| config | `object` | if not usign config file | Provider configuration |
 | where | `object` | `false` | Where statments to filter data [see filters](./docs/filters.md) |
 
 > [!WARNING] if where is not provided, all items will be deleted
@@ -340,68 +322,4 @@ db list --view "done-tasks"
 
 # load by file
 db list --view "done-tasks.yml"
-```
-
-## Renders [WIP]
-
-Renders are the ways you can display the data 
-
-It can be a console.log in the terminal, or open a browser with a table.
-
-You can declare them in the config file or in the cli
-
-```yaml
-# db.config.yml
-default_render: ui
-renders:
-    - name: ui
-      render: "/home/{username}/db-renders/ui.js"   
-```
-
-## Programatic usage 
-
-You can use this lib as a js module importing with the example bellow 
-
-> [!IMPORTANT] In this enviroment config paths and dynamic providers are not resolved so you have to use explicit values in variables
-
-```js 
-import { createDb } from '@sidekick-coder/db/api';
-import { createMarkdownProvider } from '@sidekick-coder/db/providers/markdown';
-import { createJsonProvider } from '@sidekick-coder/db/providers/json';
-import { drive } from '@sidekick-coder/db/drive';
-
-const db = createDb({
-    default_database: 'test',
-    providers: {
-        markdown: createMarkdownProvider(drive),
-        json: createJsonProvider(drive)
-    },
-    databases: [
-        {
-            name: 'markdown',
-            provider: 'markdown',
-            config: {
-                path: '/home/{username}/data/markdown',
-            }
-        },
-        {
-            name: 'json',
-            provider: 'json',
-            config: {
-                path: '/home/{username}/data/json',
-            }
-        }
-    ]
-})
-
-async function run(){
-    const markdownResponse = await db.list()
-
-    db.select('json')
-
-    const jsonResponse = await db.list()
-}
-
-run()
-
 ```

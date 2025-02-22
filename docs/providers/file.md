@@ -1,14 +1,12 @@
-# Folder provider
+# File provider
 
-This provider is a folder with a list of other folders that each folder represents a item
+This provider is a folder with a list of files, each file is a item in the database.
 
-And normaly the properties of the item are saved in a `index.(md|json)`
-
-## Options
+## Config
 
 | name | Type | Description |
 | --- | --- | --- |
-| path | `string` | Folder path, an absolute path or relative to the `db.config.yml` file
+| path | `string` | Absolute path to folder, or relative to the `db.config.yml`  file
 | format | `markdown \| json \| yaml \| yml` | Format to save `index` file
 | id_strategy | `incremental \| uuid` | Id strategy to generate ids for the items in the database
 
@@ -19,17 +17,23 @@ This are properties that are defined after the items are loaded and they are hid
 | name | Type | Description |
 | --- | --- | --- |
 | id | `string` | folder basename treated as id
-| folder | `string` | Folder absolute path
-| raw | `string` | Content of the `index` file
+| filename | `string` | file absolute path
+| raw | `string` | string content of the file
+
+### Cli
+
+```bash
+db list --provider json --config "path=./data"
+```
 
 ### Config
 
 ```yaml
-name: medias
+name: tasks
 provider:
-    name: folder
+    name: file
     config:
-        path: data 
+        path: data # relative to the db.config.yml file
         format: markdown
         id_strategy: increment
 ```

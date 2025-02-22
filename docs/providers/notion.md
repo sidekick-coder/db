@@ -29,34 +29,10 @@ db list --provider notion --config "secret_key=secret_key&database_id=database_i
 ### Config
 
 ```yaml
-databases:
-    - name: mydb 
-      provider: folder 
-      config:
+name: mydb 
+provider:
+    name: notion
+    config:
         secret_key: secret_key
         database_id: database_id
-```
-
-### Programatic
-
-```ts
-import { createDb } from '@sidekick-coder/db/api';
-import { createNotionProvider } from '@sidekick-coder/db/providers/notion';
-
-const db = createDb({
-    providers: {
-        folder: createNotionProvider(),
-    },
-})
-
-const response = await db.list({
-    provider: 'notion',
-    config: {
-        secret_token: "...",
-        database_id: "..."
-     }
-})
-
-run()
-
 ```
