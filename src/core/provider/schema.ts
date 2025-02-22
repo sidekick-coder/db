@@ -1,4 +1,3 @@
-import { InferOutput } from 'valibot'
 import { vWithExtras as v } from '../validator/index.js'
 
 const base = {
@@ -12,7 +11,3 @@ const base = {
 }
 
 export const providerSchema = v.objectWithRest(base, v.any())
-
-export interface Provider {
-    list?: ()
-}

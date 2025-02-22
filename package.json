@@ -23,11 +23,6 @@
         "db": "index.js"
     },
     "exports": {
-        "./api": {
-            "types": "./dist/core/api/index.d.ts",
-            "import": "./dist/core/api/index.js",
-            "require": "./dist/core/api/index.cjs"
-        },
         "./config": {
             "types": "./dist/core/config/index.d.ts",
             "import": "./dist/core/config/index.js",

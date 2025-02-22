@@ -2,7 +2,6 @@ import { CreateOptions } from '../database/create.js'
 import { DestroyOptions } from '../database/destroy.js'
 import { FindOptions } from '../database/find.js'
 import { UpdateOptions } from '../database/update.js'
-import { Provider } from './schema.js'
 import type { ListOptions } from '@/core/database/list.js'
 
 export interface WhereCondition {

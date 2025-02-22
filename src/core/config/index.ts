@@ -1,4 +1,2 @@
-export * from './parser.js'
-export * from './transform.js'
-export * from './resolveConfig.js'
-
+export * from './resolve.js'
+export * from './schemas.js'

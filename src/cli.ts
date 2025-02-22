@@ -2,15 +2,12 @@
 import minimist from 'minimist'
 import { dirname, resolve } from 'path'
 import { resolve as resolveConfig } from '@/core/config/resolve.js'
-import { createInstance } from '@/core/api/index.js'
 import { confirm } from '@inquirer/prompts'
 
 import { vWithExtras as v, validate } from '@/core/validator/index.js'
-//import { resolveConfig } from './core/config/resolveConfig.js'
 import { merge, omit } from 'lodash-es'
 import { createRenderer } from './core/render/createRenderer.js'
 import consoleRender from './renders/console.js'
-import { parseFile } from './utils/vars.js'
 import { createDatabase } from './core/database/index.js'
 
 async function run() {
