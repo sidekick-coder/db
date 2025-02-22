@@ -50,5 +50,5 @@ export interface DataProvider {
 }
 
 export interface MountDataProvider {
-    (config: any): DataProvider
+    (config: any, instanceConfig: { root: string }): DataProvider
 }

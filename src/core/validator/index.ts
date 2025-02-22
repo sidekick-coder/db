@@ -1,11 +1,12 @@
-import * as v from 'valibot'
+import * as valibot from 'valibot'
 import { schema as vars } from './vars.js'
+import { resolve } from 'path'
 
 type Valibot = typeof v
 
-const stringList = v.pipe(
-    v.any(),
-    v.transform((value) => {
+const stringList = valibot.pipe(
+    valibot.any(),
+    valibot.transform((value) => {
         if (typeof value === 'string') {
             return value.split(',')
         }
@@ -14,36 +15,56 @@ const stringList = v.pipe(
             return value
         }
     }),
-    v.array(v.string())
+    valibot.array(valibot.string())
 )
 
+function array<T extends ValibotSchema = ValibotSchema>(s: T) {
+    return valibot.pipe(
+        v.union([v.array(s), s]),
+        valibot.transform((value) => (Array.isArray(value) ? value : [value]))
+    )
+}
+
+function path(dirname: string) {
+    return valibot.pipe(
+        valibot.string(),
+        valibot.transform((value) => resolve(dirname, value))
+    )
+}
+
 const extras = {
+    array,
     vars,
     stringList,
-    number: v.pipe(
-        v.any(),
-        v.transform(Number),
-        v.check((n) => !isNaN(n)),
-        v.number()
+    path,
+    number: valibot.pipe(
+        valibot.any(),
+        valibot.transform(Number),
+        valibot.check((n) => !isNaN(n)),
+        valibot.number()
     ),
 }
 
 export const vWithExtras = {
-    ...v,
+    ...valibot,
     extras,
 }
+
+export const v = vWithExtras
 
 export interface ValibotWithExtras extends Valibot {
     extras: typeof extras
 }
 
-export interface ValidatorCallback<T extends v.BaseSchema<unknown, unknown, v.BaseIssue<unknown>>> {
+export type ValibotSchema = valibot.BaseSchema<unknown, unknown, valibot.BaseIssue<unknown>>
+
+export interface ValidatorCallback<T extends ValibotSchema> {
     (_v: ValibotWithExtras): T
 }
 
-export type ValidatorResult<T extends v.ObjectEntries> = v.InferOutput<v.ObjectSchema<T, undefined>>
-
-export type ValibotSchema = v.BaseSchema<unknown, unknown, v.BaseIssue<unknown>>
+export type ValidatorResult<T extends valibot.ObjectEntries> = valibot.InferOutput<
+    valibot.ObjectSchema<T, undefined>
+>
 
 export function validate<T extends ValibotSchema>(cb: ValidatorCallback<T> | T, payload: any) {
     let schema: T
@@ -54,13 +75,19 @@ export function validate<T extends ValibotSchema>(cb: ValidatorCallback<T> | T, 
         schema = cb
     }
 
-    const { output, issues, success } = v.safeParse(schema, payload)
+    const { output, issues, success } = valibot.safeParse(schema, payload)
 
     if (!success) {
         const error = new Error('Validation failed')
-        const details = issues ? v.flatten(issues) : undefined
+        const flatten = valibot.flatten(issues)
+        const details = {
+            ...flatten.root,
+            ...flatten.nested,
+        }
 
-        Object.assign(error, { details })
+        Object.assign(error, {
+            details,
+        })
 
         throw error
     }

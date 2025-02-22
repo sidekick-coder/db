@@ -1,5 +1,5 @@
 import { resolve } from 'path'
-import { Drive } from '@/core/drive/types.js'
+import { drive } from '@/core/drive/index.js'
 import { defineProvider } from '@/core/provider/defineProvider.js'
 import { DataProvider } from '@/core/provider/types.js'
 import { queryArray } from '@/core/provider/queryArray.js'
@@ -8,172 +8,163 @@ import omit from 'lodash-es/omit.js'
 import pick from 'lodash-es/pick.js'
 import { createIncrementalStategyFromFile } from '@/core/id/incremental.js'
 import { createIdMaker } from '@/core/id/index.js'
+import { v, validate } from '@/core/validator/index.js'
+import { parsers } from '@/core/parsers/index.js'
 
-interface ProviderConfig {
-    drive: Drive
-    ext: string
-    parse: (data: string) => any
-    stringify: (data: any) => string
-}
+export const provider = defineProvider((config, { root }) => {
+    const schema = v.object({
+        path: v.extras.path(root),
+        format: v.optional(v.picklist(['markdown', 'json', 'yaml']), 'markdown'),
+        id_strategy: v.optional(v.string(), 'incremental'),
+    })
 
-interface Config {
-    path: string
-    id?: {
-        strategy?: string
-        [key: string]: any
+    const { path, format, id_strategy } = validate(schema, config)
+
+    const parser = parsers.find((p) => p.name === format)
+
+    if (!parser) {
+        throw new Error(`Parser for format "${format}" not found`)
     }
-}
 
-export function createFileProvider(providerConfig: ProviderConfig) {
-    return defineProvider((config: Config) => {
-        const { drive, ext, parse, stringify } = providerConfig
-        const { path } = config
+    const makeId = createIdMaker({
+        strategies: [createIncrementalStategyFromFile(drive, resolve(path, '.db', 'last_id.json'))],
+    })
 
-        const idConfig = config.id || {}
-        const { strategy: idStrategy, ...idOptions } = idConfig
+    const list: DataProvider['list'] = async (options) => {
+        const where = options?.where || {}
+        const exclude = options?.exclude
+        const include = options?.include
+        const limit = options?.limit
+        const page = options?.page || 1
 
-        const makeId = createIdMaker({
-            strategies: [
-                createIncrementalStategyFromFile(drive, resolve(path, '.db', 'last_id.json')),
-            ],
+        const files = await drive.list(path, {
+            onlyFiles: true,
         })
 
-        const list: DataProvider['list'] = async (options) => {
-            const where = options?.where || {}
-            const exclude = options?.exclude
-            const include = options?.include
-            const limit = options?.limit
-            const page = options?.page || 1
+        const filteredFiles = files.filter((f) => {
+            if (f === '.db') return false
 
-            const files = await drive.list(path, {
-                onlyFiles: true,
-            })
+            return true
+        })
 
-            const filteredFiles = files.filter((f) => {
-                if (f === '.db') return false
+        const result = [] as any[]
 
-                return true
-            })
+        for (const file of filteredFiles) {
+            const filename = resolve(path, file)
 
-            const result = [] as any[]
+            const content = drive.readSync(filename)
 
-            for (const file of filteredFiles) {
-                const filename = resolve(path, file)
-
-                const content = await drive.read(filename)
-
-                const item: any = {
-                    id: file.replace(`.${ext}`, ''),
-                    filename: filename,
-                    raw: content,
-                }
-
-                Object.assign(item, parse(content))
-
-                result.push(item)
+            const item: any = {
+                id: file.replace(`.${parser.ext}`, ''),
+                filename: filename,
+                raw: content,
             }
 
-            let items = queryArray(result, where)
+            Object.assign(item, parser.parse(content))
 
-            if (include?.length) {
-                items = items.map((item) => pick(item, include))
-            }
-
-            if (exclude?.length && !include?.length) {
-                items = items.map((item) => omit(item, exclude))
-            }
-
-            const total = items.length
-            let total_pages = 1
-
-            if (limit) {
-                const start = (page - 1) * limit
-                const end = start + limit
-
-                items = items.slice(start, end)
-
-                total_pages = Math.ceil(result.length / limit)
-            }
-
-            const response = {
-                meta: {
-                    total,
-                    limit,
-                    total_pages,
-                },
-                data: items,
-            }
-
-            return response
+            result.push(item)
         }
 
-        const find: DataProvider['find'] = async (options) => {
-            const { data: items } = await list({
-                ...options,
-                limit: 1,
-            })
+        let items = queryArray(result, where)
 
-            return items[0] || null
+        if (include?.length) {
+            items = items.map((item) => pick(item, include))
         }
 
-        const create: DataProvider['create'] = async (options) => {
-            const { data } = options
-
-            const { id: explicitId, ...properties } = data
-            const id = explicitId || (await makeId(idStrategy, idOptions))
-            const filename = resolve(path, `${id}.${ext}`)
-
-            if (await drive.exists(filename)) {
-                throw new Error(`Item with id "${id}" already exists`)
-            }
-
-            const content = stringify(properties)
-
-            await drive.write(filename, content)
-
-            return {
-                id: id,
-                ...properties,
-            }
+        if (exclude?.length && !include?.length) {
+            items = items.map((item) => omit(item, exclude))
         }
 
-        const update: DataProvider['update'] = async (options) => {
-            const { where, data } = options
+        const total = items.length
+        let total_pages = 1
 
-            const { data: items } = await list({ where, exclude: [] })
+        if (limit) {
+            const start = (page - 1) * limit
+            const end = start + limit
 
-            for (const item of items) {
-                const filename = resolve(path, `${item.id}.${ext}`)
+            items = items.slice(start, end)
 
-                const hideKeys = ['id', 'filename', 'raw']
-
-                const properties = omit({ ...item, ...data }, hideKeys)
-
-                const content = stringify(properties)
-
-                await drive.write(filename, content)
-            }
-
-            return { count: items.length }
+            total_pages = Math.ceil(total / limit)
         }
 
-        const destroy: DataProvider['destroy'] = async (options) => {
-            const { where } = options
-            const { data: items } = await list({ where, include: ['filename'] })
-
-            for (const item of items) {
-                await drive.destroy(item.filename)
-            }
-
-            return { count: items.length }
+        const response = {
+            meta: {
+                total,
+                limit,
+                total_pages,
+            },
+            data: items,
         }
+
+        return response
+    }
+
+    const find: DataProvider['find'] = async (options) => {
+        const { data: items } = await list({
+            ...options,
+            limit: 1,
+        })
+
+        return items[0] || null
+    }
+
+    const create: DataProvider['create'] = async (options) => {
+        const { data } = options
+
+        const { id: explicitId, ...properties } = data
+        const id = explicitId || (await makeId(id_strategy, {}))
+        const filename = resolve(path, `${id}.${parser.ext}`)
+
+        if (await drive.exists(filename)) {
+            throw new Error(`Item with id "${id}" already exists`)
+        }
+
+        const content = parser.stringify(properties)
+
+        await drive.write(filename, content)
 
         return {
-            list,
-            find,
-            create,
-            update,
-            destroy,
+            id: id,
+            ...properties,
         }
-    })
-}
+    }
+
+    const update: DataProvider['update'] = async (options) => {
+        const { where, data } = options
+
+        const { data: items } = await list({ where, exclude: [] })
+
+        for (const item of items) {
+            const filename = resolve(path, `${item.id}.${parser.ext}`)
+
+            const hideKeys = ['id', 'filename', 'raw']
+
+            const properties = omit({ ...item, ...data }, hideKeys)
+
+            const content = parser.stringify(properties)
+
+            await drive.write(filename, content)
+        }
+
+        return { count: items.length }
+    }
+
+    const destroy: DataProvider['destroy'] = async (options) => {
+        const { where } = options
+        const { data: items } = await list({ where, include: ['filename'] })
+
+        for (const item of items) {
+            await drive.destroy(item.filename)
+        }
+
+        return { count: items.length }
+    }
+
+    return {
+        list,
+        find,
+        create,
+        update,
+        destroy,
+    }
+})
