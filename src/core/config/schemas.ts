@@ -8,18 +8,17 @@ export type DatabaseDefinition = InferOutput<ReturnType<typeof database>>
 const viewSources = (root: string) =>
     v.pipe(
         sources(root),
+        v.transform((items) => items.map((i) => i.data)),
         v.transform((items) => {
-            return items
-                .map((i) => i.data)
-                .map((i) => {
-                    if (i.extend) {
-                        const parent = items.find((x: any) => x.name === i.extend)
+            return items.map((i) => {
+                if (i.extend) {
+                    const parent = items.find((x) => x.name === i.extend)
 
-                        return merge({}, parent, i)
-                    }
+                    return merge({}, parent, i)
+                }
 
-                    return i
-                })
+                return i
+            })
         })
     )
 
