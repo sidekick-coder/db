@@ -33,11 +33,6 @@
             "import": "./dist/core/drive/index.js",
             "require": "./dist/core/drive/index.cjs"
         },
-        "./providers": {
-            "types": "./dist/providers/index.d.ts",
-            "import": "./dist/providers/index.js",
-            "require": "./dist/providers/index.cjs"
-        },
         "./utils": {
             "types": "./dist/utils/index.d.ts",
             "import": "./dist/utils/index.js",
