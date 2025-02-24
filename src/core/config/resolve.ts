@@ -5,6 +5,8 @@ import { database, config } from './schemas.js'
 import { dirname } from 'path'
 import { SourceItemFile } from '../common/sources.js'
 
+export type Config = ReturnType<typeof resolve>
+
 export function resolve(filename: string) {
     const root = dirname(filename)
 
@@ -34,5 +36,11 @@ export function resolve(filename: string) {
 
     const yml = YAML.parse(text)
 
-    return validate(schema, yml)
+    const result = validate(schema, yml)
+
+    return {
+        dirname: root,
+        filename,
+        ...result,
+    }
 }
