@@ -83,7 +83,7 @@ export const drive: Drive = {
     },
     write: async (path, content, options) => {
         if (options?.recursive) {
-            await drive.mkdir(dirname(path))
+            await drive.mkdir(dirname(path), { recursive: true })
         }
 
         return fs.promises.writeFile(path, content, 'utf-8')

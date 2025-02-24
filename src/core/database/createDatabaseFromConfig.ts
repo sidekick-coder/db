@@ -10,5 +10,5 @@ export function createDatabaseFromConfig(config: Config, name: string) {
 
     const defintion = source.data
 
-    return createDatabase(defintion, { root: config.dirname })
+    return createDatabase(defintion, { root: source.dirname || config.dirname })
 }

@@ -15,7 +15,7 @@ export const provider = defineProvider((config, { root }) => {
     const schema = v.object({
         path: v.extras.path(root),
         format: v.optional(v.picklist(['markdown', 'json', 'yaml']), 'markdown'),
-        id_strategy: v.optional(v.string(), 'incremental'),
+        id_strategy: v.optional(v.string(), 'increment'),
     })
 
     const { path, format, id_strategy } = validate(schema, config)
