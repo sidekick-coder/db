@@ -3,6 +3,7 @@ import { DestroyOptions } from '../database/destroy.js'
 import { FindOptions } from '../database/find.js'
 import { UpdateOptions } from '../database/update.js'
 import type { ListOptions } from '@/core/database/list.js'
+import { FilesystemOptionsFs } from '../filesystem/types.js'
 
 export interface WhereCondition {
     field: string
@@ -48,6 +49,11 @@ export interface DataProvider {
     destroy?: (options: DestroyOptions) => Promise<{ count: number }>
 }
 
+export interface DataProviderInstanceOptions {
+    root: string
+    fs?: FilesystemOptionsFs
+}
+
 export interface MountDataProvider {
-    (config: any, instanceConfig: { root: string }): DataProvider
+    (config: any, instanceConfig: DataProviderInstanceOptions): DataProvider
 }

@@ -5,15 +5,12 @@ import { DataProvider } from '@/core/provider/index.js'
 import crypto from 'crypto'
 import { drive } from '@/core/drive/index.js'
 import { resolve } from 'path'
-import { filesystem } from '@/utils/filesystem.js'
-
-function encode(value: string) {
-    return new TextEncoder().encode(value)
-}
-
-function decode(value: Uint8Array) {
-    return new TextDecoder().decode(value)
-}
+import { createFilesystem } from '@/core/filesystem/createFilesystem.js'
+import { parsers } from '@/core/parsers/all.js'
+import { queryArray } from '@/core/provider/queryArray.js'
+import { omit, pick } from 'lodash-es'
+import { createIdMaker } from '@/core/id/index.js'
+import { createIncrementalStategyFromFile } from '@/core/id/incremental.js'
 
 function encrypt(payload: any) {
     const schema = v.object({
@@ -83,20 +80,27 @@ function decrypt(payload: any) {
     throw new Error('Invalid type')
 }
 
-export const provider = defineProvider((payload, { root }) => {
+export const provider = defineProvider((payload, { root, fs }) => {
+    const filesystem = createFilesystem({ fs })
+
     const schema = v.object({
         format: v.optional(v.string(), 'markdown'),
         path: v.extras.path(root),
+        id_strategy: v.optional(v.string(), 'increment'),
     })
 
     const config = validate(schema, payload)
-    const folderProvider = folder.provider(
-        {
-            format: config.format,
-            path: config.path,
-        },
-        { root }
-    )
+    const parser = parsers.find((p) => p.name === config.format)
+
+    if (!parser) {
+        throw new Error(`Parser for format "${config.format}" not found`)
+    }
+
+    const makeId = createIdMaker({
+        strategies: [
+            createIncrementalStategyFromFile(drive, resolve(config.path, '.db', 'last_id.json')),
+        ],
+    })
 
     function checkPassword(payload: any) {
         const password = validate((v) => v.string(), payload.password)
@@ -330,6 +334,130 @@ export const provider = defineProvider((payload, { root }) => {
 
         return files
     }
+
+    const list: DataProvider['list'] = async (options) => {
+        const password = validate((v) => v.string('Password is required'), options?.password)
+
+        const check = checkPassword({ password })
+
+        if (!check.valid) {
+            throw new Error(check.message)
+        }
+
+        const where = options?.where || {}
+        const exclude = options?.exclude || []
+        const include = options?.include || []
+        const limit = options?.limit
+        const page = options?.page || 1
+
+        const files = filesystem.readdirSync(config.path)
+        const exclude_patterns = ['.db']
+
+        const result = [] as any[]
+
+        for (const folder of files) {
+            if (exclude_patterns.includes(folder)) {
+                continue
+            }
+
+            const metadata = filesystem.readSync.json(
+                resolve(config.path, folder, '.db', '.metadata.json')
+            )
+
+            const realIndexFilename = `index.${parser.ext}`
+            const encryptedIndexFilename = encrypt({
+                type: 'hex',
+                value: realIndexFilename,
+                password,
+                salt: metadata.salt,
+                iv: metadata.iv,
+            }) as string
+
+            let indexFilename = realIndexFilename
+
+            if (!filesystem.existsSync(resolve(config.path, folder, indexFilename))) {
+                indexFilename = encryptedIndexFilename
+            }
+
+            const fullFilename = resolve(config.path, folder, indexFilename)
+
+            if (!filesystem.existsSync(fullFilename)) {
+                const error = new Error('Index file not found')
+
+                Object.assign(error, {
+                    folder: resolve(config.path, folder),
+                    real_filename: `index.${parser.ext}`,
+                    encrypted_filename: encryptedIndexFilename,
+                })
+
+                throw error
+            }
+
+            const fileMeta = metadata?.files?.find((f: any) => f.name === indexFilename)
+
+            let raw = await filesystem.read(fullFilename)
+
+            if (fileMeta?.encrypted) {
+                raw = decrypt({
+                    type: 'uint8',
+                    value: raw,
+                    password,
+                    salt: metadata.salt,
+                    iv: metadata.iv,
+                }) as Uint8Array
+            }
+
+            const rawText = new TextDecoder().decode(raw)
+
+            const item = {
+                id: folder.replace(`.${parser.ext}`, ''),
+                folder: resolve(config.path, folder),
+                raw: rawText,
+            }
+
+            Object.assign(item, parser.parse(rawText))
+
+            result.push(item)
+        }
+
+        let items = queryArray(result, where)
+
+        if (include.length) {
+            items = items.map((item) => pick(item, include))
+        }
+
+        if (exclude.length && !include.length) {
+            items = items.map((item) => omit(item, exclude))
+        }
+
+        if (limit) {
+            const start = (page - 1) * limit
+            const end = start + limit
+
+            items = items.slice(start, end)
+        }
+
+        const response = {
+            meta: {
+                total: result.length,
+                limit,
+                total_pages: limit ? Math.ceil(result.length / limit) : 1,
+            },
+            data: items,
+        }
+
+        return response
+    }
+
+    const find: DataProvider['find'] = async (options) => {
+        const { data: items } = await list({
+            ...options,
+            limit: 1,
+        })
+
+        return items[0] || null
+    }
+
     const create: DataProvider['create'] = async (payload) => {
         const password = validate((v) => v.string(), payload.password)
         const data = validate((v) => v.any(), payload.data)
@@ -337,16 +465,26 @@ export const provider = defineProvider((payload, { root }) => {
         const check = checkPassword({ password })
 
         if (!check.valid) {
-            return {
-                message: check.message,
-            }
+            throw new Error(check.message)
         }
 
-        const item = await folderProvider.create!({
-            data,
-        })
+        const id = data.id || (await makeId(config.id_strategy))
 
-        return item
+        if (await drive.exists(resolve(config.path, id))) {
+            throw new Error(`Item with id "${id}" already exists`)
+        }
+
+        const filename = resolve(config.path, id, `index.${parser.ext}`)
+
+        await drive.mkdir(resolve(config.path, id))
+
+        await drive.write(filename, parser.stringify(data))
+
+        await lock({ password, id })
+
+        const item = await find({ where: { id: String(id) }, password })
+
+        return item!
     }
 
     return {
@@ -357,5 +495,6 @@ export const provider = defineProvider((payload, { root }) => {
         lock: withPassword(lock),
         unlock: withPassword(unlock),
         create,
+        list: withPassword(list),
     }
 })
