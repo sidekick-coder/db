@@ -1,6 +1,6 @@
 import * as v from 'valibot'
 import { dirname, resolve } from 'path'
-import { readYaml } from '@/utils/filesystem.js'
+import { filesystem } from '@/utils/filesystem.js'
 import qs from 'qs'
 
 function createReviver(folder: string) {
@@ -25,7 +25,9 @@ export const schema = v.optional(
                 const file = value.replace(/^@/, '')
                 const folder = dirname(file)
 
-                return readYaml(value.replace(/^@/, ''), createReviver(folder))
+                return filesystem.readSync.yaml(value.replace(/^@/, ''), {
+                    reviver: createReviver(folder),
+                })
             }
 
             if (typeof value == 'string' && value.includes('=')) {

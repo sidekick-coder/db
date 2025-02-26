@@ -15,6 +15,7 @@ export interface Drive {
     exists: (path: string) => Promise<boolean>
     existsSync: (path: string) => boolean
     write: (path: string, content: string, options?: RecursiveOptions) => Promise<void>
+    writeSync: (path: string, content: string, options?: RecursiveOptions) => void
     mkdir: (path: string, options?: RecursiveOptions) => Promise<void>
     destroy: (path: string) => Promise<void>
 }

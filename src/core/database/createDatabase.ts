@@ -46,6 +46,7 @@ export function createDatabase(definition: DatabaseDefinition, options: Options)
     }
 
     return {
+        provider: instance,
         name: definition.name,
         list,
         find,

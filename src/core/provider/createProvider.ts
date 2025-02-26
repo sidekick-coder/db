@@ -1,6 +1,7 @@
 import * as file from '@/providers/file/index.js'
 import * as folder from '@/providers/folder/index.js'
 import * as notion from '@/providers/notion/index.js'
+import * as vault from '@/providers/vault/index.js'
 
 const providers = [
     {
@@ -14,6 +15,10 @@ const providers = [
     {
         name: 'notion',
         provider: notion.provider,
+    },
+    {
+        name: 'vault',
+        provider: vault.provider,
     },
 ]
 

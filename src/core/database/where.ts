@@ -1,4 +1,4 @@
-import { vWithExtras as v } from '../validator/index.js'
+import { v } from '../validator/index.js'
 
 export function transformWhere(where: any) {
     const { and, or, ...rest } = where

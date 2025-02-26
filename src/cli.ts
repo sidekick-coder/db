@@ -5,14 +5,14 @@ import { resolve as resolveConfig } from '@/core/config/resolve.js'
 import { confirm } from '@inquirer/prompts'
 
 import { vWithExtras as v, validate } from '@/core/validator/index.js'
-import { merge, omit } from 'lodash-es'
+import { camelCase, kebabCase, merge, omit, snakeCase } from 'lodash-es'
 import { createRenderer } from './core/render/createRenderer.js'
 import consoleRender from './renders/console.js'
 import { createDatabase } from './core/database/index.js'
 
 async function run() {
     const { _: allArgs, ...flags } = minimist(process.argv.slice(2), {
-        string: ['file', 'where', 'view', 'data', 'database', 'render'],
+        string: ['file', 'where', 'view', 'data', 'database', 'render', 'id'],
         alias: {
             file: 'f',
             where: 'w',
@@ -172,7 +172,10 @@ async function run() {
         })
     }
 
-    const method = database.method(name)
+    const method =
+        database.provider[name] ||
+        database.provider[snakeCase(name)] ||
+        database.provider[camelCase(name)]
 
     if (method) {
         const response = await method(options)

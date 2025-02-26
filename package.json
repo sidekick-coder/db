@@ -52,11 +52,11 @@
         "prepublishOnly": "tsup --dts"
     },
     "devDependencies": {
+        "@sidekick-coder/eslint-config": "^1.0.1",
         "@types/lodash-es": "^4.17.12",
+        "@types/minimist": "^1.2.5",
         "@types/node": "^22.10.5",
         "@types/qs": "^6.9.17",
-        "@types/minimist": "^1.2.5",
-        "@sidekick-coder/eslint-config": "^1.0.1",
         "eslint": "^9.18.0",
         "tsup": "^8.3.5",
         "tsx": "^4.19.2",

@@ -5,11 +5,14 @@ import { DataProvider } from '../provider/index.js'
 
 export interface FindOptions extends InferOutput<typeof schema> {}
 
-const schema = v.object({
-    where: v.optional(where),
-    include: v.optional(v.extras.stringList),
-    exclude: v.optional(v.extras.stringList),
-})
+const schema = v.objectWithRest(
+    {
+        where: v.optional(where),
+        include: v.optional(v.extras.stringList),
+        exclude: v.optional(v.extras.stringList),
+    },
+    v.any()
+)
 
 export async function find(provider: DataProvider, payload: FindOptions) {
     const options = validate(schema, payload)

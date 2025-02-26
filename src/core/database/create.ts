@@ -4,9 +4,12 @@ import { DataProvider } from '../provider/index.js'
 
 export interface CreateOptions extends InferOutput<typeof schema> {}
 
-const schema = v.object({
-    data: v.record(v.string(), v.any()),
-})
+const schema = v.objectWithRest(
+    {
+        data: v.record(v.string(), v.any()),
+    },
+    v.any()
+)
 
 export async function create(provider: DataProvider, payload: CreateOptions) {
     if (!provider.create) {

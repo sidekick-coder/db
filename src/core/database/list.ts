@@ -5,14 +5,19 @@ import { DataProvider } from '../provider/index.js'
 
 export interface ListOptions extends InferOutput<typeof schema> {}
 
-const schema = v.object({
-    where: v.optional(where),
-    limit: v.optional(v.number()),
-    page: v.optional(v.number()),
-    cursor: v.optional(v.string()),
-    include: v.optional(v.extras.stringList),
-    exclude: v.optional(v.extras.stringList),
-})
+const schema = v.objectWithRest(
+    {
+        where: v.optional(where),
+        limit: v.optional(v.number()),
+        page: v.optional(v.number()),
+        cursor: v.optional(v.string()),
+        include: v.optional(v.extras.stringList),
+        exclude: v.optional(v.extras.stringList),
+        sortBy: v.optional(v.extras.array(v.string())),
+        sortDesc: v.optional(v.extras.array(v.boolean())),
+    },
+    v.any()
+)
 
 export async function list(provider: DataProvider, payload: ListOptions) {
     const options = validate(schema, payload)

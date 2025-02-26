@@ -1,7 +1,7 @@
 import { defineRender } from '@/core/render/defineRender.js'
 import Table from 'cli-table3'
 
-function general(output: any) {
+function general(output: any = {}) {
     const screenWidth = process.stdout.columns || 80
 
     const table = new Table({
@@ -99,6 +99,10 @@ export default defineRender({
 
         if (method === 'list') {
             return list(output, options.columns)
+        }
+
+        if (Array.isArray(output)) {
+            return output.forEach((o) => general(o))
         }
 
         return general(output)
