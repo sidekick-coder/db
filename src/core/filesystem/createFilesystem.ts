@@ -198,13 +198,19 @@ export function createFilesystem(options: FilesystemOptions = {}) {
     return {
         exists: fs.exists,
         existsSync: fs.existsSync,
+
         read,
         readSync,
+
         readdir,
         readdirSync,
+
         write,
         writeSync,
+
         mkdir,
+        mkdirSync,
+
         remove,
         removeSync,
     }

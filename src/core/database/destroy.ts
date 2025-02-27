@@ -7,6 +7,7 @@ export interface DestroyOptions extends InferOutput<typeof schema> {}
 
 const schema = v.object({
     where: v.optional(where),
+    limit: v.optional(v.number()),
 })
 
 export async function destroy(provider: DataProvider, payload: DestroyOptions) {

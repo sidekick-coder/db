@@ -181,7 +181,7 @@ export const provider = defineProvider((config: any) => {
 
     const destroy: DataProvider['destroy'] = async (options) => {
         const { where } = options
-        const { data, meta } = await list({ where, exclude: [] })
+        const { data } = await list({ where, exclude: [] })
 
         let count = 0
 

@@ -11,8 +11,11 @@ export default [
     addIgnoreFile(resolve(__dirname, '.gitignore')),
     {
         rules: {
-            'markdown/no-missing-label-refs': 'off',
             'linebreak-style': 'off',
+            '@typescript-eslint/no-unused-vars': [
+                'error',
+                { argsIgnorePattern: '^_', caughtErrors: 'none' },
+            ],
         },
     },
 ]

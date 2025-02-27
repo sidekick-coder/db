@@ -2,7 +2,7 @@ import path from 'path'
 import { ListOptions } from '@/core/database/list.js'
 import { Config } from './config.js'
 import { Filesystem } from '@/core/filesystem/createFilesystem.js'
-import { createEncryption } from './encryption.js'
+import { Encryption } from './encryption.js'
 import { count, query } from '@/core/provider/queryArray.js'
 import { findMetadata } from './findMetadata.js'
 
@@ -10,16 +10,15 @@ interface Options {
     filesystem: Filesystem
     listOptions: ListOptions
     providerConfig: Config
-    password: string
+    encryption: Encryption
     parser: {
         ext: string
         parse: (raw: string) => Record<string, any>
     }
 }
 
-export function list(options: Options) {
-    const { filesystem, listOptions, providerConfig, parser, password } = options
-    const encryption = createEncryption()
+export async function list(options: Options) {
+    const { filesystem, encryption, listOptions, providerConfig, parser } = options
 
     const where = listOptions?.where || {}
     const exclude = listOptions?.exclude || []
@@ -43,9 +42,7 @@ export function list(options: Options) {
             id: folder,
         })
 
-        if (metadata) {
-            encryption.setSalt(metadata.salt).setIv(metadata.iv).setPassword(password)
-        }
+        encryption.setSalt(metadata.salt).setIv(metadata.iv)
 
         const filename = filesystem.existsSync(
             path.resolve(providerConfig.path, folder, `index.${parser.ext}`)

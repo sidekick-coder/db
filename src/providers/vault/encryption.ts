@@ -3,6 +3,8 @@ import { InferOutput } from 'valibot'
 import crypto from 'crypto'
 import { validate } from '@/core/validator/validate.js'
 
+export type Encryption = ReturnType<typeof createEncryption>
+
 const schema = v.object({
     value: v.union([v.string(), v.extras.uint8()]),
     salt: v.optional(v.string(), crypto.randomBytes(16).toString('hex')),

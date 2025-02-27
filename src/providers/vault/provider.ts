@@ -1,5 +1,5 @@
 import { defineProvider } from '@/core/provider/defineProvider.js'
-import { v, validate } from '@/core/validator/index.js'
+import { validate } from '@/core/validator/index.js'
 import { DataProvider } from '@/core/provider/index.js'
 import crypto from 'crypto'
 import { drive } from '@/core/drive/index.js'
@@ -9,20 +9,30 @@ import { parsers } from '@/core/parsers/all.js'
 import { createIdMaker } from '@/core/id/index.js'
 import { createIncrementalStategyFromFile } from '@/core/id/incremental.js'
 import { createEncryption, decrypt, encrypt } from './encryption.js'
-import { list as vaultList } from './list.js'
 import { schema as configSchema } from './config.js'
+import { list as vaultList } from './list.js'
+import { find as vaultFind } from './find.js'
+import { create as vaultCreate } from './create.js'
+import { update as vaultUpdate } from './update.js'
+import { destroy as vaultDestroy } from './destroy.js'
+import { lock as vaultLock } from './lock.js'
+import { unlock as vaultUnlock } from './unlock.js'
+import { setPassword as vaultSetPassword } from './setPassword.js'
 
 export const provider = defineProvider((payload, { root, fs }) => {
     const config = validate(configSchema(root), payload)
-    const parser = parsers.find((p) => p.name === config.format)
     const filesystem = createFilesystem({ fs })
     const encryption = createEncryption()
+
+    // parser
+    const parser = parsers.find((p) => p.name === config.format)
 
     if (!parser) {
         throw new Error(`Parser for format "${config.format}" not found`)
     }
 
-    const makeId = createIdMaker({
+    // id maker
+    const maker = createIdMaker({
         strategies: [
             createIncrementalStategyFromFile(
                 drive,
@@ -31,6 +41,9 @@ export const provider = defineProvider((payload, { root, fs }) => {
         ],
     })
 
+    const makeId = () => maker(config.id_strategy)
+
+    // password
     const password = validate((v) => v.string(), payload.password)
 
     const filename = path.resolve(config.path, '.db', 'password.json')
@@ -55,206 +68,92 @@ export const provider = defineProvider((payload, { root, fs }) => {
         throw new Error('Password incorrect')
     }
 
+    // methods
     function setPassword(payload: any) {
-        const schema = v.object({
-            salt: v.optional(v.string(), crypto.randomBytes(16).toString('hex')),
-            iv: v.optional(v.string(), crypto.randomBytes(16).toString('hex')),
-            password: v.string(),
+        const salt = crypto.randomBytes(16).toString('hex')
+        const iv = crypto.randomBytes(16).toString('hex')
+
+        return vaultSetPassword({
+            filesystem,
+            password: payload.password,
+            providerConfig: config,
+            salt,
+            iv,
         })
-
-        const options = validate(schema, payload)
-
-        const filename = path.resolve(config.path, '.db', 'password.json')
-
-        if (drive.existsSync(filename)) {
-            return {
-                message: 'Password already set',
-                filename,
-            }
-        }
-
-        const encrypted = encryption
-            .setSalt(options.salt)
-            .setIv(options.iv)
-            .encrypt(crypto.randomBytes(16).toString('hex') + 'success')
-
-        const json = {
-            salt: options.salt,
-            iv: options.iv,
-            encrypted,
-        }
-
-        filesystem.writeSync.json(filename, json, {
-            recursive: true,
-        })
-
-        return {
-            message: 'Password set',
-            filename,
-        }
-    }
-
-    function findMetadata(payload: any) {
-        const options = validate(v.object({ id: v.string() }), payload)
-
-        const filepath = path.resolve(config.path, options.id, '.db', '.metadata.json')
-
-        const json: any = filesystem.readSync.json(filepath, {
-            default: {
-                salt: crypto.randomBytes(16).toString('hex'),
-                iv: crypto.randomBytes(16).toString('hex'),
-                files: [],
-            },
-        })
-
-        const all = filesystem.readdirSync(path.resolve(config.path, options.id))
-
-        const files = [] as any
-
-        all.filter((file) => file !== '.db').forEach((file) => {
-            const meta = json.files.find((f: any) => f.name === file)
-
-            files.push({
-                name: file,
-                encrypted: false,
-                ...meta,
-            })
-        })
-
-        json.files = files
-
-        const schema = v.object({
-            salt: v.string(),
-            iv: v.string(),
-            files: v.array(v.object({ name: v.string(), encrypted: v.boolean() })),
-        })
-
-        return validate(schema, json)
     }
 
     async function lock(payload: any) {
-        const schema = v.object({
-            id: v.string(),
+        const id = validate((v) => v.string('id is required'), payload.id)
+
+        return vaultLock({
+            id,
+            encryption,
+            filesystem,
+            providerConfig: config,
         })
-
-        const options = validate(schema, payload)
-
-        const filepath = path.resolve(config.path, options.id)
-
-        if (!filesystem.existsSync(filepath)) {
-            throw new Error(`Item ${options.id} not found`)
-        }
-
-        const metadata = findMetadata({ id: options.id })
-
-        encryption.setSalt(metadata.salt).setIv(metadata.iv)
-
-        for (const file of metadata.files) {
-            if (file.encrypted) {
-                continue
-            }
-
-            const source_filename = file.name
-            const target_filename = encryption.encrypt(source_filename)
-
-            const contents = filesystem.readSync(path.resolve(filepath, source_filename))
-            const encrypted = encryption.encrypt(contents)
-
-            filesystem.writeSync(path.resolve(filepath, target_filename), encrypted)
-            filesystem.removeSync(path.resolve(filepath, source_filename))
-
-            file.encrypted = true
-            file.name = target_filename
-        }
-
-        filesystem.writeSync.json(path.resolve(filepath, '.db', '.metadata.json'), metadata, {
-            recursive: true,
-        })
-
-        return metadata.files
     }
 
     function unlock(payload: any) {
-        const schema = v.object({
-            id: v.string(),
+        const id = validate((v) => v.string('id is required'), payload.id)
+
+        return vaultUnlock({
+            id,
+            encryption,
+            filesystem,
+            providerConfig: config,
         })
-
-        const options = validate(schema, payload)
-
-        const filepath = path.resolve(config.path, options.id)
-
-        if (!filesystem.existsSync(path.resolve(filepath, '.db', '.metadata.json'))) {
-            throw new Error('Metadata file not found')
-        }
-
-        const metadata = findMetadata({ id: options.id })
-
-        encryption.setSalt(metadata.salt).setIv(metadata.iv)
-
-        for (const file of metadata.files) {
-            if (!file.encrypted) {
-                continue
-            }
-
-            const source_filename = file.name as string
-            const target_filename = encryption.decrypt(source_filename)
-            const encrypted = filesystem.readSync(path.resolve(filepath, source_filename))
-
-            const contents = encryption.decrypt(encrypted)
-
-            filesystem.writeSync(path.resolve(filepath, target_filename), contents)
-            filesystem.removeSync(path.resolve(filepath, source_filename))
-
-            file.encrypted = false
-            file.name = target_filename
-        }
-
-        filesystem.writeSync.json(path.resolve(filepath, '.db', '.metadata.json'), metadata, {
-            recursive: true,
-        })
-
-        return metadata.files
     }
 
     const list: DataProvider['list'] = async (options) => {
         return vaultList({
             filesystem,
-            listOptions: options,
-            password: config.password,
+            encryption,
             providerConfig: config,
             parser,
+            listOptions: options,
         })
     }
 
     const find: DataProvider['find'] = async (options) => {
-        const { data: items } = await list({
-            ...options,
-            limit: 1,
+        return vaultFind({
+            filesystem,
+            encryption,
+            providerConfig: config,
+            parser,
+            findOptions: options,
+            makeId,
         })
-
-        return items[0] || null
     }
 
     const create: DataProvider['create'] = async (payload) => {
-        const data = validate((v) => v.any(), payload.data)
+        return vaultCreate({
+            filesystem,
+            encryption,
+            providerConfig: config,
+            parser,
+            createOptions: payload,
+            makeId,
+        })
+    }
 
-        const id = data.id || (await makeId(config.id_strategy))
+    const update: DataProvider['update'] = async (payload) => {
+        return vaultUpdate({
+            filesystem,
+            encryption,
+            providerConfig: config,
+            parser,
+            updateOptions: payload,
+        })
+    }
 
-        if (await drive.exists(path.resolve(config.path, id))) {
-            throw new Error(`Item with id "${id}" already exists`)
-        }
-
-        const filename = path.resolve(config.path, id, `index.${parser.ext}`)
-
-        await filesystem.mkdir(path.resolve(config.path, id))
-
-        await filesystem.write.text(filename, parser.stringify(data))
-
-        await lock({ password, id })
-
-        const item = await find({ where: { id: String(id) }, password })
-
-        return item!
+    const destroy: DataProvider['destroy'] = async (payload) => {
+        return vaultDestroy({
+            filesystem,
+            parser,
+            encryption,
+            providerConfig: config,
+            destroyOptions: payload,
+        })
     }
 
     return {
@@ -263,7 +162,10 @@ export const provider = defineProvider((payload, { root, fs }) => {
         decrypt,
         lock,
         unlock,
-        create,
         list,
+        find,
+        create,
+        update,
+        destroy,
     }
 })

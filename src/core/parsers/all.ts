@@ -1,12 +1,13 @@
 import { MD } from './markdown.js'
 import { YAML } from './yaml.js'
 
-interface Parser {
+export interface Parser {
     name: string
     ext: string
     parse: (data: string) => any
     stringify: (data: any) => string
 }
+
 export const parsers = [] as Parser[]
 
 parsers.push({

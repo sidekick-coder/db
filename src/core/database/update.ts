@@ -8,6 +8,7 @@ export interface UpdateOptions extends InferOutput<typeof schema> {}
 const schema = v.object({
     data: v.record(v.string(), v.any()),
     where: v.optional(where),
+    limit: v.optional(v.number()),
 })
 
 export async function update(provider: DataProvider, payload: UpdateOptions) {

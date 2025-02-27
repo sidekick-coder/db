@@ -80,7 +80,7 @@ export function createFsNode(): FilesystemOptionsFs {
     }
 
     const remove: FilesystemOptionsFs['remove'] = async (path: string) => {
-        const [, error] = await tryCatch(() => fs.promises.rm(path))
+        const [, error] = await tryCatch(() => fs.promises.rm(path, { recursive: true }))
 
         if (error) {
             throw error
@@ -88,7 +88,7 @@ export function createFsNode(): FilesystemOptionsFs {
     }
 
     const removeSync: FilesystemOptionsFs['removeSync'] = (path: string) => {
-        const [, error] = tryCatch.sync(() => fs.rmSync(path))
+        const [, error] = tryCatch.sync(() => fs.rmSync(path, { recursive: true }))
 
         if (error) {
             throw error

@@ -17,7 +17,7 @@ type Entry = EntryFile | EntryDirectory
 
 const entries = new Map<string, Entry>()
 
-export function createFsFaker(): FilesystemOptionsFs {
+export function createFsFake(): FilesystemOptionsFs {
     const exists: FilesystemOptionsFs['exists'] = async (path: string) => {
         return entries.has(path)
     }

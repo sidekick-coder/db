@@ -1,15 +1,15 @@
-const operatorMap = {
-    eq: 'equals',
-    ne: 'does_not_equal',
-    gt: 'greater_than',
-    gte: 'greater_than_or_equal_to',
-    lt: 'less_than',
-    lte: 'less_than_or_equal_to',
-    in: 'contains',
-    nin: 'does_not_contain',
-    like: 'contains',
-    nlike: 'does_not_contain',
-}
+//const operatorMap = {
+//    eq: 'equals',
+//    ne: 'does_not_equal',
+//    gt: 'greater_than',
+//    gte: 'greater_than_or_equal_to',
+//    lt: 'less_than',
+//    lte: 'less_than_or_equal_to',
+//    in: 'contains',
+//    nin: 'does_not_contain',
+//    like: 'contains',
+//    nlike: 'does_not_contain',
+//}
 
 const dateOperatorsMap = {
     eq: 'equals',
@@ -32,19 +32,18 @@ export function parseWhere(where: any, properties: any) {
     if (rest.operator === 'in') {
         const or = rest.value.map((v: any) => ({
             property: rest.field,
-                [property.type]: {
-                    equals: v,
-                },
+            [property.type]: {
+                equals: v,
+            },
         }))
-            
 
         return {
-            or
+            or,
         }
     }
 
     if (rest.operator === 'exists') {
-        return { 
+        return {
             property: rest.field,
             [property.type]: {
                 is_not_empty: rest.value ? true : undefined,
@@ -52,9 +51,9 @@ export function parseWhere(where: any, properties: any) {
             },
         }
     }
-    
+
     if (property?.type === 'formula') {
-        return { 
+        return {
             property: rest.field,
             [property.type]: {
                 string: {
@@ -74,7 +73,6 @@ export function parseWhere(where: any, properties: any) {
         }
     }
 
-    
     if (and?.length) {
         and.forEach((w: any) => {
             result.and.push(parseWhere(w, properties))
@@ -85,7 +83,7 @@ export function parseWhere(where: any, properties: any) {
         or.forEach((w: any) => {
             result.or.push(parseWhere(w, properties))
         })
-    }   
+    }
 
     if (result.and.length === 1 && !result.or.length) {
         return result.and[0]
@@ -96,7 +94,7 @@ export function parseWhere(where: any, properties: any) {
     }
 
     if (!result.and.length) {
-        delete result.and 
+        delete result.and
     }
 
     return result

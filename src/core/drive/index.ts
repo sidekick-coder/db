@@ -88,6 +88,15 @@ export const drive: Drive = {
 
         return fs.promises.writeFile(path, content, 'utf-8')
     },
+    writeSync: (path, content, options) => {
+        if (options?.recursive) {
+            const parent = dirname(path)
+
+            drive.mkdirSync(parent, { recursive: true })
+        }
+
+        return fs.writeFileSync(path, content, 'utf-8')
+    },
     mkdir: async (path, options) => {
         if (await drive.exists(path)) return
 
@@ -97,7 +106,21 @@ export const drive: Drive = {
 
         return fs.promises.mkdir(path)
     },
+    mkdirSync: (path, options) => {
+        if (drive.existsSync(path)) return
+
+        if (options?.recursive) {
+            const parent = dirname(path)
+
+            drive.mkdirSync(parent, { recursive: true })
+        }
+
+        return fs.mkdirSync(path)
+    },
     destroy: (path) => {
         return fs.promises.rm(path, { recursive: true })
+    },
+    destroySync: (path) => {
+        return fs.rmSync(path, { recursive: true })
     },
 }

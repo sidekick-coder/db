@@ -8,7 +8,6 @@ export async function importAll(path: string, options: any) {
     const result = {}
 
     for await (const file of files) {
-
         if (options?.exclude && options.exclude.includes(file)) {
             continue
         }

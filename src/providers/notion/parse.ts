@@ -1,4 +1,4 @@
-import { DataItem, Where, WhereCondition } from '@/core/provider/types.js'
+import { DataItem } from '@/core/provider/types.js'
 import { has, get } from 'lodash-es'
 
 function getOne(value: any, keys: string[]) {
@@ -216,4 +216,3 @@ export function toNotionObject(itemData: DataItem, properties: any) {
 
     return result
 }
-

@@ -5,7 +5,6 @@ import { DataProvider } from '@/core/provider/types.js'
 import { query, count } from '@/core/provider/queryArray.js'
 
 import omit from 'lodash-es/omit.js'
-import pick from 'lodash-es/pick.js'
 import { createIncrementalStategyFromFile } from '@/core/id/incremental.js'
 import { createIdMaker } from '@/core/id/index.js'
 import { v, validate } from '@/core/validator/index.js'
