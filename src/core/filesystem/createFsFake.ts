@@ -1,6 +1,4 @@
-import fs from 'fs'
 import { FilesystemOptionsFs } from './types.js'
-import { tryCatch } from '@/utils/tryCatch.js'
 
 interface EntryFile {
     name: string
@@ -19,7 +17,7 @@ type Entry = EntryFile | EntryDirectory
 
 const entries = new Map<string, Entry>()
 
-export function createDefaultFs(): FilesystemOptionsFs {
+export function createFsFaker(): FilesystemOptionsFs {
     const exists: FilesystemOptionsFs['exists'] = async (path: string) => {
         return entries.has(path)
     }
