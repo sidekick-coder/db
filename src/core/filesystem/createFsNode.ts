@@ -2,7 +2,7 @@ import fs from 'fs'
 import { FilesystemOptionsFs } from './types.js'
 import { tryCatch } from '@/utils/tryCatch.js'
 
-export function createDefaultFs(): FilesystemOptionsFs {
+export function createFsNode(): FilesystemOptionsFs {
     const exists: FilesystemOptionsFs['exists'] = async (path: string) => {
         const [, error] = await tryCatch(() => fs.promises.access(path))
 

@@ -1,10 +1,7 @@
 import { resolve } from 'path'
 import { defineProvider } from '@/core/provider/defineProvider.js'
 import { DataProvider } from '@/core/provider/types.js'
-import { queryArray } from '@/core/provider/queryArray.js'
-
-import omit from 'lodash-es/omit.js'
-import pick from 'lodash-es/pick.js'
+import { query, count } from '@/core/provider/queryArray.js'
 import { drive } from '@/core/drive/index.js'
 import { createIdMaker } from '@/core/id/index.js'
 import { createIncrementalStategyFromFile } from '@/core/id/incremental.js'
@@ -59,33 +56,24 @@ export const provider = defineProvider((config, { root }) => {
             result.push(item)
         }
 
-        let items = queryArray(result, where)
+        const items = query(result, {
+            where,
+            exclude,
+            include,
+            limit,
+            offset: page > 1 ? (page - 1) * limit : 0,
+        })
 
-        if (include.length) {
-            items = items.map((item) => pick(item, include))
+        const meta = {
+            total: count(result, { where }),
+            limit,
+            total_pages: limit ? Math.ceil(result.length / limit) : 1,
         }
 
-        if (exclude.length && !include.length) {
-            items = items.map((item) => omit(item, exclude))
-        }
-
-        if (limit) {
-            const start = (page - 1) * limit
-            const end = start + limit
-
-            items = items.slice(start, end)
-        }
-
-        const response = {
-            meta: {
-                total: result.length,
-                limit,
-                total_pages: limit ? Math.ceil(result.length / limit) : 1,
-            },
+        return {
+            meta,
             data: items,
         }
-
-        return response
     }
 
     const find: DataProvider['find'] = async (options) => {

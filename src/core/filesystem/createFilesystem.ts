@@ -1,15 +1,17 @@
 import { tryCatch } from '@/utils/tryCatch.js'
 import { YAML } from '@/core/parsers/yaml.js'
 import type { FilesystemOptionsFs } from './types.js'
-import { createDefaultFs } from './createDefaultFs.js'
+import { createFsNode } from './createFsNode.js'
 import { dirname } from 'path'
 
 export interface FilesystemOptions {
     fs?: FilesystemOptionsFs
 }
 
+export type Filesystem = ReturnType<typeof createFilesystem>
+
 export function createFilesystem(options: FilesystemOptions = {}) {
-    const fs = options.fs || createDefaultFs()
+    const fs = options.fs || createFsNode()
 
     const locks = new Set<string>()
 

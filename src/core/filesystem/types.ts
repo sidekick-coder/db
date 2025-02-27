@@ -10,6 +10,9 @@ export interface FilesystemOptionsFs {
 
     write: (path: string, content: Uint8Array) => Promise<void>
     writeSync: (path: string, content: Uint8Array) => void
+
+    mkdir: (path: string) => Promise<void>
+    mkdirSync: (path: string) => void
 }
 
 export interface FilesystemOptions {

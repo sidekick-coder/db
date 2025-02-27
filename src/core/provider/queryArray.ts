@@ -1,6 +1,7 @@
 import sift from 'sift'
 import { Where, WhereCondition } from './types.js'
 import { transformWhere } from '@/core/database/where.js'
+import { omit, pick } from 'lodash-es'
 
 const operatorMap = {
     eq: '$eq',
@@ -72,9 +73,40 @@ function parseWhere(payload: Where) {
     return parsed
 }
 
-export function queryArray(data: any[], where: Where) {
+interface Options {
+    where?: Where
+    include?: string[]
+    exclude?: string[]
+    limit?: number
+    offset?: number
+}
+
+export function query(data: any[], options?: Options) {
+    const { where, include, exclude } = options
+
+    const limit = options.limit || 20
+    const offset = options.offset || 0
     const siftQuery = parseWhere(where)
 
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    return data.filter(sift(siftQuery))
+    let items = data.filter(sift(siftQuery))
+
+    if (include?.length) {
+        items = items.map((item) => pick(item, options.include))
+    }
+
+    if (exclude?.length && !options.include.length) {
+        items = items.map((item) => omit(item, exclude))
+    }
+
+    items = items.slice(offset, offset + limit)
+
+    return items
+}
+
+export function count(data: any[], options: Pick<Options, 'where'>) {
+    const items = query(data, { where: options.where })
+
+    return items.length
 }

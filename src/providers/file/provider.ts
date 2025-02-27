@@ -2,7 +2,7 @@ import { resolve } from 'path'
 import { drive } from '@/core/drive/index.js'
 import { defineProvider } from '@/core/provider/defineProvider.js'
 import { DataProvider } from '@/core/provider/types.js'
-import { queryArray } from '@/core/provider/queryArray.js'
+import { query, count } from '@/core/provider/queryArray.js'
 
 import omit from 'lodash-es/omit.js'
 import pick from 'lodash-es/pick.js'
@@ -65,38 +65,24 @@ export const provider = defineProvider((config, { root }) => {
             result.push(item)
         }
 
-        let items = queryArray(result, where)
+        const items = query(result, {
+            where,
+            exclude,
+            include,
+            limit,
+            offset: page > 1 ? (page - 1) * limit : 0,
+        })
 
-        if (include?.length) {
-            items = items.map((item) => pick(item, include))
+        const meta = {
+            total: count(result, { where }),
+            limit,
+            total_pages: limit ? Math.ceil(result.length / limit) : 1,
         }
 
-        if (exclude?.length && !include?.length) {
-            items = items.map((item) => omit(item, exclude))
-        }
-
-        const total = items.length
-        let total_pages = 1
-
-        if (limit) {
-            const start = (page - 1) * limit
-            const end = start + limit
-
-            items = items.slice(start, end)
-
-            total_pages = Math.ceil(total / limit)
-        }
-
-        const response = {
-            meta: {
-                total,
-                limit,
-                total_pages,
-            },
+        return {
+            meta,
             data: items,
         }
-
-        return response
     }
 
     const find: DataProvider['find'] = async (options) => {
