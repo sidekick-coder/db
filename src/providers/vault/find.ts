@@ -10,7 +10,6 @@ interface Options {
     findOptions: FindOptions
     providerConfig: Config
     encryption: Encryption
-    makeId: () => Promise<string>
     parser: Parser
 }
 

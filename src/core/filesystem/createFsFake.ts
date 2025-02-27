@@ -1,3 +1,5 @@
+import { basename, dirname } from 'path'
+
 import { FilesystemOptionsFs } from './types.js'
 
 interface EntryFile {
@@ -15,15 +17,16 @@ interface EntryDirectory {
 
 type Entry = EntryFile | EntryDirectory
 
-const entries = new Map<string, Entry>()
-
 export function createFsFake(): FilesystemOptionsFs {
-    const exists: FilesystemOptionsFs['exists'] = async (path: string) => {
-        return entries.has(path)
-    }
+    const entries = new Map<string, Entry>()
 
     const existsSync: FilesystemOptionsFs['existsSync'] = (path: string) => {
-        return entries.has(path)
+        const result = entries.has(path)
+
+        return result
+    }
+    const exists: FilesystemOptionsFs['exists'] = async (path: string) => {
+        return existsSync(path)
     }
 
     const read: FilesystemOptionsFs['read'] = async (path: string) => {
@@ -53,9 +56,11 @@ export function createFsFake(): FilesystemOptionsFs {
             return []
         }
 
-        return Array.from(entries.values())
-            .filter((entry) => entry.path.startsWith(directory.path))
+        const result = Array.from(entries.values())
+            .filter((entry) => dirname(entry.path) === directory.path)
             .map((entry) => entry.name)
+
+        return result
     }
 
     const readdirSync: FilesystemOptionsFs['readdirSync'] = (path: string) => {
@@ -65,14 +70,16 @@ export function createFsFake(): FilesystemOptionsFs {
             return []
         }
 
-        return Array.from(entries.values())
-            .filter((entry) => entry.path.startsWith(directory.path))
+        const result = Array.from(entries.values())
+            .filter((entry) => dirname(entry.path) === directory.path)
             .map((entry) => entry.name)
+
+        return result
     }
 
     const write: FilesystemOptionsFs['write'] = async (path: string, content: Uint8Array) => {
         entries.set(path, {
-            name: path,
+            name: basename(path),
             path,
             type: 'file',
             content,
@@ -81,7 +88,7 @@ export function createFsFake(): FilesystemOptionsFs {
 
     const writeSync: FilesystemOptionsFs['writeSync'] = (path: string, content: Uint8Array) => {
         entries.set(path, {
-            name: path,
+            name: basename(path),
             path,
             type: 'file',
             content,
@@ -90,7 +97,7 @@ export function createFsFake(): FilesystemOptionsFs {
 
     const mkdir: FilesystemOptionsFs['mkdir'] = async (path: string) => {
         entries.set(path, {
-            name: path,
+            name: basename(path),
             path,
             type: 'directory',
         })
@@ -98,21 +105,34 @@ export function createFsFake(): FilesystemOptionsFs {
 
     const mkdirSync: FilesystemOptionsFs['mkdirSync'] = (path: string) => {
         entries.set(path, {
-            name: path,
+            name: basename(path),
             path,
             type: 'directory',
         })
     }
 
-    const remove: FilesystemOptionsFs['remove'] = async (path: string) => {
-        entries.delete(path)
-    }
-
     const removeSync: FilesystemOptionsFs['removeSync'] = (path: string) => {
-        entries.delete(path)
+        const entry = entries.get(path)
+
+        if (!entry) return
+
+        const keys = [] as string[]
+
+        if (entry?.type === 'directory') {
+            Array.from(entries.keys())
+                .filter((key) => key.startsWith(path))
+                .forEach((key) => keys.push(key))
+        }
+
+        keys.forEach((key) => entries.delete(key))
+    }
+    const remove: FilesystemOptionsFs['remove'] = async (path: string) => {
+        removeSync(path)
     }
 
     return {
+        entries,
+
         exists,
         existsSync,
 

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
-import { queryArray } from './queryArray.js'
+import { query } from './queryArray.js'
 
-describe('queryArray', () => {
+describe('query', () => {
     it('should filter', () => {
         const data = [
             { name: 'John', age: 30 },
@@ -13,7 +13,7 @@ describe('queryArray', () => {
             name: 'John',
         }
 
-        const result = queryArray(data, where)
+        const result = query(data, { where })
 
         expect(result).toEqual([{ name: 'John', age: 30 }])
     })
@@ -29,7 +29,7 @@ describe('queryArray', () => {
             and: [{ age: 30 }, { job: 'developer' }],
         }
 
-        const result = queryArray(data, where)
+        const result = query(data, { where })
 
         expect(result).toEqual([
             { name: 'John', age: 30, job: 'developer' },
@@ -48,7 +48,7 @@ describe('queryArray', () => {
             or: [{ age: 31 }, { job: 'design' }],
         }
 
-        const result = queryArray(data, where)
+        const result = query(data, { where })
 
         expect(result).toEqual([
             { name: 'John', age: 31, job: 'developer' },
@@ -67,7 +67,7 @@ describe('queryArray', () => {
             and: [{ age: 30 }, { or: [{ job: 'developer' }, { job: 'design' }] }],
         }
 
-        const result = queryArray(data, where)
+        const result = query(data, { where })
 
         expect(result).toEqual([
             { name: 'Doe', age: 30, job: 'developer' },
@@ -84,7 +84,7 @@ describe('queryArray', () => {
                 { name: 'Doe', age: 30 },
             ]
 
-            const result = queryArray(data, where)
+            const result = query(data, { where })
 
             expect(result).toEqual([{ name: 'Doe', age: 30 }])
         }
@@ -106,7 +106,7 @@ describe('queryArray', () => {
             ],
         }
 
-        const result = queryArray(data, where)
+        const result = query(data, { where })
 
         expect(result).toEqual([
             { title: 'Todo 1', status: 'in_progress' },

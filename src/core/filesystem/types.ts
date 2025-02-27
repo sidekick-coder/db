@@ -16,6 +16,8 @@ export interface FilesystemOptionsFs {
 
     remove: (path: string) => Promise<void>
     removeSync: (path: string) => void
+
+    [key: string]: any
 }
 
 export interface FilesystemOptions {

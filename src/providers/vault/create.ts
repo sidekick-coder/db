@@ -45,7 +45,6 @@ export async function create(options: Options) {
         findOptions: { where: { id: String(id) }, limit: 1 },
         providerConfig,
         encryption,
-        makeId,
         parser,
     })
 
