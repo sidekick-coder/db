@@ -1,5 +1,18 @@
 import { defineRender } from '@/core/render/defineRender.js'
 import Table from 'cli-table3'
+import chalk from 'chalk'
+
+function formatValue(value: any) {
+    if (typeof value === 'boolean') {
+        return value ? chalk.green('true') : chalk.red('false')
+    }
+
+    if (typeof value === 'object') {
+        return JSON.stringify(value)
+    }
+
+    return value
+}
 
 function general(output: any = {}) {
     const screenWidth = process.stdout.columns || 80
@@ -11,7 +24,7 @@ function general(output: any = {}) {
     })
 
     for (const key of Object.keys(output)) {
-        table.push([key, output[key]])
+        table.push([key, formatValue(output[key])])
     }
 
     console.log(table.toString())
@@ -43,7 +56,7 @@ function list(output: any, columns?: any[]) {
         const row = [] as string[]
 
         head.forEach((h) => {
-            row.push(item[h.value] || '')
+            row.push(formatValue(item[h.value]))
         })
 
         rows.push(row)

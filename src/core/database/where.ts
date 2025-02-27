@@ -1,4 +1,38 @@
+import { WhereCondition } from '../provider/types.js'
 import { v } from '../validator/index.js'
+
+export function parseCondition(condition: WhereCondition) {
+    if (condition.value === '$true') {
+        return {
+            or: [],
+            and: [
+                {
+                    field: condition.field,
+                    operator: condition.operator,
+                    value: true,
+                },
+            ],
+        }
+    }
+
+    if (condition.value === '$false') {
+        return {
+            or: [],
+            and: [
+                {
+                    field: condition.field,
+                    operator: condition.operator,
+                    value: false,
+                },
+            ],
+        }
+    }
+
+    return {
+        and: [condition],
+        or: [],
+    }
+}
 
 export function transformWhere(where: any) {
     const { and, or, ...rest } = where
@@ -17,11 +51,19 @@ export function transformWhere(where: any) {
     }
 
     for (const [key, value] of Object.entries<any>(rest)) {
-        result.and.push({
+        const { and, or } = parseCondition({
             field: value?.field || key,
             operator: value?.operator || 'eq',
             value: value?.value || value,
         })
+
+        if (and) {
+            result.and.push(...and)
+        }
+
+        if (or) {
+            result.or.push(...or)
+        }
     }
 
     if (and?.length) {
