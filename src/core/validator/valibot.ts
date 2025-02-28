@@ -3,6 +3,8 @@ import { schema as vars } from './vars.js'
 import { resolve } from 'path'
 import * as inquirer from '@inquirer/prompts'
 import type { ValibotSchema } from './types.js'
+import { FilesystemOptionsPath } from '../filesystem/types.js'
+import { createPathNode } from '../filesystem/createPathNode.js'
 
 export type Valibot = typeof valibot
 
@@ -31,10 +33,10 @@ function array<T extends ValibotSchema = ValibotSchema>(s: T) {
     )
 }
 
-function path(dirname: string) {
+function path(dirname: string, path: FilesystemOptionsPath = createPathNode()) {
     return valibot.pipe(
         valibot.string(),
-        valibot.transform((value) => resolve(dirname, value))
+        valibot.transform((value) => path.resolve(dirname, value))
     )
 }
 

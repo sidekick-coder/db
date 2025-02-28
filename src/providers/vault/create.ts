@@ -1,4 +1,3 @@
-import path from 'path'
 import { Config } from './config.js'
 import { Filesystem } from '@/core/filesystem/createFilesystem.js'
 import { Encryption } from './encryption.js'
@@ -18,18 +17,19 @@ interface Options {
 
 export async function create(options: Options) {
     const { filesystem, encryption, createOptions, providerConfig, makeId, parser } = options
+    const resolve = (...args: string[]) => filesystem.path.resolve(providerConfig.path, ...args)
 
     const data = createOptions.data
 
     const id = data.id || (await makeId())
 
-    if (filesystem.existsSync(path.resolve(providerConfig.path, id))) {
+    if (filesystem.existsSync(resolve(id))) {
         throw new Error(`Item with id "${id}" already exists`)
     }
 
-    const filename = path.resolve(providerConfig.path, id, `index.${parser.ext}`)
+    const filename = resolve(id, `index.${parser.ext}`)
 
-    filesystem.mkdirSync(path.resolve(providerConfig.path, id))
+    filesystem.mkdirSync(resolve(id))
 
     filesystem.writeSync.text(filename, parser.stringify(data))
 

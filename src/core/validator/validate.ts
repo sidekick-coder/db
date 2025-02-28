@@ -18,15 +18,27 @@ export function validate<T extends ValibotSchema>(cb: ValidatorCallback<T> | T, 
     const { output, issues, success } = v.safeParse(schema, payload)
 
     if (!success) {
-        const error = new Error('Validation failed')
         const flatten = v.flatten(issues)
-        const details = {
-            ...flatten.root,
-            ...flatten.nested,
+        const messages = [] as string[]
+
+        if (flatten.root) {
+            messages.push(...flatten.root)
         }
 
+        if (flatten.nested) {
+            Object.entries(flatten.nested).forEach(([key, value]) => {
+                messages.push(...value.map((v) => `${key}: ${v}`))
+            })
+        }
+
+        const message = messages.length ? messages.join(', ') : 'Validation failed'
+
+        const error = new Error(message)
+
+        error.name = 'ValidationError'
+
         Object.assign(error, {
-            details,
+            messages,
         })
 
         throw error

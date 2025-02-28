@@ -1,4 +1,3 @@
-import path from 'path'
 import { Config } from './config.js'
 import { Filesystem } from '@/core/filesystem/createFilesystem.js'
 import { Encryption } from './encryption.js'
@@ -13,10 +12,9 @@ interface Options {
 
 export async function unlock(options: Options) {
     const { filesystem, encryption, providerConfig, id } = options
+    const resolve = (...args: string[]) => filesystem.path.resolve(providerConfig.path, ...args)
 
-    const filepath = path.resolve(providerConfig.path, options.id)
-
-    if (!filesystem.existsSync(path.resolve(filepath, '.db', '.metadata.json'))) {
+    if (!filesystem.existsSync(resolve(options.id, '.db', 'metadata.json'))) {
         throw new Error('Metadata file not found')
     }
 
@@ -31,18 +29,18 @@ export async function unlock(options: Options) {
 
         const source_filename = file.name as string
         const target_filename = encryption.decrypt(source_filename)
-        const encrypted = filesystem.readSync(path.resolve(filepath, source_filename))
+        const encrypted = filesystem.readSync(resolve(options.id, source_filename))
 
         const contents = encryption.decrypt(encrypted)
 
-        filesystem.writeSync(path.resolve(filepath, target_filename), contents)
-        filesystem.removeSync(path.resolve(filepath, source_filename))
+        filesystem.writeSync(resolve(options.id, target_filename), contents)
+        filesystem.removeSync(resolve(options.id, source_filename))
 
         file.encrypted = false
         file.name = target_filename
     }
 
-    filesystem.writeSync.json(path.resolve(filepath, '.db', '.metadata.json'), metadata, {
+    filesystem.writeSync.json(resolve(options.id, '.db', '.metadata.json'), metadata, {
         recursive: true,
     })
 

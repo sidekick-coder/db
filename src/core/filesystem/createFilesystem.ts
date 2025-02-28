@@ -1,24 +1,21 @@
 import { tryCatch } from '@/utils/tryCatch.js'
 import { YAML } from '@/core/parsers/yaml.js'
-import type { FilesystemOptionsFs } from './types.js'
+import type { FilesystemOptions } from './types.js'
 import { createFsNode } from './createFsNode.js'
-import { dirname } from 'path'
-
-export interface FilesystemOptions {
-    fs?: FilesystemOptionsFs
-}
+import { createPathNode } from './createPathNode.js'
 
 export type Filesystem = ReturnType<typeof createFilesystem>
 
 export function createFilesystem(options: FilesystemOptions = {}) {
     const fs = options.fs || createFsNode()
+    const path = options.path || createPathNode()
 
     const locks = new Set<string>()
 
-    function awaitLock(path: string, timeout = 1000) {
+    function awaitLock(filepath: string, timeout = 1000) {
         return new Promise<void>((resolve, reject) => {
             const interval = setInterval(() => {
-                if (!locks.has(path)) {
+                if (!locks.has(filepath)) {
                     clearInterval(interval)
                     resolve()
                 }
@@ -31,8 +28,8 @@ export function createFilesystem(options: FilesystemOptions = {}) {
         })
     }
 
-    async function read(path: string) {
-        return fs.read(path)
+    async function read(filepath: string) {
+        return fs.read(filepath)
     }
 
     read.text = async function (filepath: string, options?: any) {
@@ -45,8 +42,8 @@ export function createFilesystem(options: FilesystemOptions = {}) {
         return new TextDecoder().decode(content)
     }
 
-    read.json = async function (path: string, options?: any) {
-        const content = await read.text(path)
+    read.json = async function (filepath: string, options?: any) {
+        const content = await read.text(filepath)
 
         if (!content) {
             return options?.default || null
@@ -57,8 +54,8 @@ export function createFilesystem(options: FilesystemOptions = {}) {
         return error ? options?.default || null : json
     }
 
-    read.yaml = async function (path: string, options?: any) {
-        const content = await read.text(path)
+    read.yaml = async function (filepath: string, options?: any) {
+        const content = await read.text(filepath)
 
         if (!content) {
             return options?.default || null
@@ -69,8 +66,8 @@ export function createFilesystem(options: FilesystemOptions = {}) {
         return error ? options?.default || null : yml
     }
 
-    function readSync(path: string) {
-        return fs.readSync(path)
+    function readSync(filepath: string) {
+        return fs.readSync(filepath)
     }
 
     readSync.text = function (filepath: string, defaultValue: string = '') {
@@ -83,8 +80,8 @@ export function createFilesystem(options: FilesystemOptions = {}) {
         return new TextDecoder().decode(content)
     }
 
-    readSync.json = function (path: string, options?: any) {
-        const content = readSync.text(path)
+    readSync.json = function (filepath: string, options?: any) {
+        const content = readSync.text(filepath)
 
         if (!content) {
             return options?.default || null
@@ -95,8 +92,8 @@ export function createFilesystem(options: FilesystemOptions = {}) {
         return error ? options?.default || null : json
     }
 
-    readSync.yaml = function (path: string, options?: any) {
-        const content = readSync.text(path)
+    readSync.yaml = function (filepath: string, options?: any) {
+        const content = readSync.text(filepath)
 
         if (!content) {
             return options?.default || null
@@ -107,19 +104,19 @@ export function createFilesystem(options: FilesystemOptions = {}) {
         return error ? options?.default || null : yml
     }
 
-    async function readdir(path: string) {
-        return fs.readdir(path)
+    async function readdir(filepath: string) {
+        return fs.readdir(filepath)
     }
 
-    function readdirSync(path: string) {
-        return fs.readdirSync(path)
+    function readdirSync(filepath: string) {
+        return fs.readdirSync(filepath)
     }
 
     async function mkdir(filepath: string, options?: any) {
         if (await fs.exists(filepath)) return
 
         if (options?.recursive) {
-            const parent = dirname(filepath)
+            const parent = path.dirname(filepath)
 
             await mkdir(parent, options)
         }
@@ -131,7 +128,7 @@ export function createFilesystem(options: FilesystemOptions = {}) {
         if (fs.existsSync(filepath)) return
 
         if (options?.recursive) {
-            const parent = dirname(filepath)
+            const parent = path.dirname(filepath)
 
             mkdirSync(parent, options)
         }
@@ -147,7 +144,7 @@ export function createFilesystem(options: FilesystemOptions = {}) {
         locks.add(filename)
 
         if (options?.recursive) {
-            const parent = dirname(filename)
+            const parent = path.dirname(filename)
 
             await mkdir(parent, { recursive: true })
         }
@@ -171,7 +168,7 @@ export function createFilesystem(options: FilesystemOptions = {}) {
 
     function writeSync(filename: string, content: Uint8Array, options?: any) {
         if (options?.recursive) {
-            const parent = dirname(filename)
+            const parent = path.dirname(filename)
 
             mkdirSync(parent, { recursive: true })
         }
@@ -187,15 +184,18 @@ export function createFilesystem(options: FilesystemOptions = {}) {
         writeSync.text(filename, JSON.stringify(content, null, 2), options)
     }
 
-    function remove(path: string) {
-        return fs.remove(path)
+    function remove(filepath: string) {
+        return fs.remove(filepath)
     }
 
-    function removeSync(path: string) {
-        return fs.removeSync(path)
+    function removeSync(filepath: string) {
+        return fs.removeSync(filepath)
     }
 
     return {
+        path,
+        fs,
+
         exists: fs.exists,
         existsSync: fs.existsSync,
 

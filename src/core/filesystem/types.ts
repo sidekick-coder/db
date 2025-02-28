@@ -20,6 +20,14 @@ export interface FilesystemOptionsFs {
     [key: string]: any
 }
 
+export interface FilesystemOptionsPath {
+    resolve: (...args: string[]) => string
+    join: (...args: string[]) => string
+    dirname: (args: string) => string
+    basename: (args: string) => string
+}
+
 export interface FilesystemOptions {
     fs?: FilesystemOptionsFs
+    path?: FilesystemOptionsPath
 }

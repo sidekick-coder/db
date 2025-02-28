@@ -1,4 +1,3 @@
-import path from 'path'
 import { Config } from './config.js'
 import { Filesystem } from '@/core/filesystem/createFilesystem.js'
 import { Encryption } from './encryption.js'
@@ -18,6 +17,7 @@ interface Options {
 
 export async function update(options: Options) {
     const { filesystem, encryption, updateOptions, providerConfig, parser } = options
+    const resolve = (...args: string[]) => filesystem.path.resolve(providerConfig.path, ...args)
 
     const data = updateOptions.data
 
@@ -52,11 +52,7 @@ export async function update(options: Options) {
             (f) => f.name === baseNameEncrypted || f.name === baseName
         )
 
-        const filename = path.resolve(
-            providerConfig.path,
-            id,
-            fileMeta.encrypted ? baseNameEncrypted : baseName
-        )
+        const filename = resolve(id, fileMeta.encrypted ? baseNameEncrypted : baseName)
 
         const properties = omit({ ...item, ...data }, hideKeys)
 

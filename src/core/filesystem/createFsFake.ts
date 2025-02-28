@@ -20,7 +20,15 @@ type Entry = EntryFile | EntryDirectory
 export function createFsFake(): FilesystemOptionsFs {
     const entries = new Map<string, Entry>()
 
+    entries.set('/', {
+        name: '/',
+        type: 'directory',
+        path: '/',
+    })
+
     const existsSync: FilesystemOptionsFs['existsSync'] = (path: string) => {
+        if (path === '/') return true
+
         const result = entries.has(path)
 
         return result
@@ -49,20 +57,6 @@ export function createFsFake(): FilesystemOptionsFs {
         return entry.content
     }
 
-    const readdir: FilesystemOptionsFs['readdir'] = async (path: string) => {
-        const directory = entries.get(path)
-
-        if (!directory || directory.type !== 'directory') {
-            return []
-        }
-
-        const result = Array.from(entries.values())
-            .filter((entry) => dirname(entry.path) === directory.path)
-            .map((entry) => entry.name)
-
-        return result
-    }
-
     const readdirSync: FilesystemOptionsFs['readdirSync'] = (path: string) => {
         const directory = entries.get(path)
 
@@ -76,17 +70,17 @@ export function createFsFake(): FilesystemOptionsFs {
 
         return result
     }
-
-    const write: FilesystemOptionsFs['write'] = async (path: string, content: Uint8Array) => {
-        entries.set(path, {
-            name: basename(path),
-            path,
-            type: 'file',
-            content,
-        })
+    const readdir: FilesystemOptionsFs['readdir'] = async (path: string) => {
+        return readdirSync(path)
     }
 
     const writeSync: FilesystemOptionsFs['writeSync'] = (path: string, content: Uint8Array) => {
+        const directory = entries.get(dirname(path))
+
+        if (!directory || directory.type !== 'directory') {
+            throw new Error(`Directory ${dirname(path)} does not exist`)
+        }
+
         entries.set(path, {
             name: basename(path),
             path,
@@ -95,7 +89,17 @@ export function createFsFake(): FilesystemOptionsFs {
         })
     }
 
-    const mkdir: FilesystemOptionsFs['mkdir'] = async (path: string) => {
+    const write: FilesystemOptionsFs['write'] = async (path: string, content: Uint8Array) => {
+        return writeSync(path, content)
+    }
+
+    const mkdirSync: FilesystemOptionsFs['mkdirSync'] = (path: string) => {
+        const directory = entries.get(dirname(path))
+
+        if (!directory || directory.type !== 'directory') {
+            throw new Error(`Directory ${dirname(path)} does not exist`)
+        }
+
         entries.set(path, {
             name: basename(path),
             path,
@@ -103,7 +107,7 @@ export function createFsFake(): FilesystemOptionsFs {
         })
     }
 
-    const mkdirSync: FilesystemOptionsFs['mkdirSync'] = (path: string) => {
+    const mkdir: FilesystemOptionsFs['mkdir'] = async (path: string) => {
         entries.set(path, {
             name: basename(path),
             path,
@@ -116,7 +120,7 @@ export function createFsFake(): FilesystemOptionsFs {
 
         if (!entry) return
 
-        const keys = [] as string[]
+        const keys = [path] as string[]
 
         if (entry?.type === 'directory') {
             Array.from(entries.keys())

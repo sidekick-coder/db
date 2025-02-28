@@ -1,4 +1,3 @@
-import path from 'path'
 import { ListOptions } from '@/core/database/list.js'
 import { Config } from './config.js'
 import { Filesystem } from '@/core/filesystem/createFilesystem.js'
@@ -19,6 +18,8 @@ interface Options {
 
 export async function list(options: Options) {
     const { filesystem, encryption, listOptions, providerConfig, parser } = options
+
+    const resolve = (...args: string[]) => filesystem.path.resolve(providerConfig.path, ...args)
 
     const where = listOptions?.where || {}
     const exclude = listOptions?.exclude || []
@@ -44,19 +45,17 @@ export async function list(options: Options) {
 
         encryption.setSalt(metadata.salt).setIv(metadata.iv)
 
-        const filename = filesystem.existsSync(
-            path.resolve(providerConfig.path, folder, `index.${parser.ext}`)
-        )
-            ? path.resolve(providerConfig.path, folder, `index.${parser.ext}`)
-            : path.resolve(providerConfig.path, folder, encryption.encrypt(`index.${parser.ext}`))
+        const filename = filesystem.existsSync(resolve(folder, `index.${parser.ext}`))
+            ? resolve(folder, `index.${parser.ext}`)
+            : resolve(folder, encryption.encrypt(`index.${parser.ext}`))
 
-        const basename = path.basename(filename)
+        const basename = filesystem.path.basename(filename)
 
         if (!filesystem.existsSync(filename)) {
             const error = new Error('Index file not found')
 
             Object.assign(error, {
-                folder: path.resolve(providerConfig.path, folder),
+                folder: resolve(folder),
                 filename: `index.${parser.ext}`,
                 encrypted_filename: encryption.encrypt(`index.${parser.ext}`),
             })
@@ -76,7 +75,7 @@ export async function list(options: Options) {
 
         const item = {
             id: folder.replace(`.${parser.ext}`, ''),
-            folder: path.resolve(providerConfig.path, folder),
+            folder: resolve(folder),
             raw: rawText,
             encrypted: fileMeta?.encrypted || false,
         }

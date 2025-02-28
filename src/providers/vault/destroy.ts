@@ -1,4 +1,3 @@
-import path from 'path'
 import { Config } from './config.js'
 import { Filesystem } from '@/core/filesystem/createFilesystem.js'
 import { Encryption } from './encryption.js'
@@ -29,7 +28,9 @@ export async function destroy(options: Options) {
     })
 
     for (const item of items) {
-        filesystem.removeSync(path.resolve(providerConfig.path, item.id))
+        const filename = filesystem.path.resolve(providerConfig.path, item.id)
+
+        filesystem.removeSync(filename)
     }
 
     return { count: items.length }

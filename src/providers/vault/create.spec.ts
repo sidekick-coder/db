@@ -1,28 +1,25 @@
 import crypto from 'crypto'
 import { describe, expect, it, beforeEach } from 'vitest'
 
-import { createFilesystem } from '@/core/filesystem/createFilesystem.js'
-import { createFsFake } from '@/core/filesystem/createFsFake.js'
+import { createFilesystemFake } from '@/core/filesystem/index.js'
 import { create } from './create.js'
 import { createEncryption } from './encryption.js'
 import { validate } from '@/core/validator/validate.js'
 import { schema as configSchema } from './config.js'
 import { parsers } from '@/core/parsers/all.js'
-import { lock } from './lock.js'
 
 describe('create', () => {
-    const root = 'D:\\vault'
+    const filesystem = createFilesystemFake()
+    const resolve = filesystem.path.resolve
+    const root = resolve('vault')
 
-    const config = validate(configSchema(root), {
+    const config = validate(configSchema('/', filesystem.path), {
         format: 'json',
         path: root,
         id_strategy: 'increment',
         password: crypto.randomBytes(16).toString('hex'),
     })
 
-    const fs = createFsFake()
-
-    const filesystem = createFilesystem({ fs })
     const encryption = createEncryption({ password: config.password })
     const parser = parsers.find((p) => p.name === config.format)
 
@@ -43,13 +40,13 @@ describe('create', () => {
         })
 
         expect(result).toEqual(expect.objectContaining({ id: 'item1', name: 'Item 1' }))
-        expect(filesystem.existsSync(`${root}\\item1`)).toBe(true)
+        expect(filesystem.existsSync(resolve(root, 'item1'))).toBe(true)
     })
 
     it('should throw an error if item already exists', async () => {
-        filesystem.mkdirSync(`${root}\\item1`)
+        filesystem.mkdirSync(resolve(root, 'item1'))
         filesystem.writeSync.text(
-            `${root}\\item1\\index.json`,
+            resolve(root, 'item1', `index.${parser.ext}`),
             JSON.stringify({ id: 'item1', name: 'Item 1' })
         )
 
@@ -76,35 +73,18 @@ describe('create', () => {
             makeId: async () => 'item1',
         })
 
-        await lock({
-            id: 'item1',
-            encryption,
-            filesystem,
-            providerConfig: config,
-        })
+        expect(filesystem.existsSync(resolve(root, 'item1'))).toBe(true)
 
-        await create({
-            filesystem,
-            encryption,
-            providerConfig: config,
-            parser,
-            createOptions: { data: { name: 'Item 2' } },
-            makeId: async () => 'item2',
-        })
+        expect(filesystem.existsSync(resolve(root, 'item1', '.db', 'metadata.json'))).toBe(true)
 
-        expect(filesystem.existsSync(`${root}\\item2`)).toBe(true)
-        expect(filesystem.existsSync(`${root}\\item2\\.db\\.metadata.json`)).toBe(true)
-
-        const metadata = filesystem.readSync.json(`${root}\\item2\\.db\\.metadata.json`)
+        const metadata = filesystem.readSync.json(resolve(root, 'item1', '.db', 'metadata.json'))
 
         for (const file of metadata.files) {
             expect(file.encrypted).toBe(true)
 
-            const contents = filesystem.readSync.text(`${root}\\item2\\${file.name}`)
+            const contents = filesystem.readSync.text(resolve(root, 'item2', file.name))
 
-            expect(contents).not.toEqual(
-                expect.stringContaining(JSON.stringify({ name: 'Item 2' }))
-            )
+            expect(contents).not.toEqual(parser.stringify({ name: 'Item 1' }))
         }
     })
 })

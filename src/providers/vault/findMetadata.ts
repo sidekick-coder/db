@@ -1,4 +1,3 @@
-import path from 'path'
 import crypto from 'crypto'
 
 import { Filesystem } from '@/core/filesystem/createFilesystem.js'
@@ -15,7 +14,9 @@ interface Options {
 export function findMetadata(options: Options) {
     const { filesystem, providerConfig, id } = options
 
-    const filepath = path.resolve(providerConfig.path, id, '.db', '.metadata.json')
+    const resolve = (...args: string[]) => filesystem.path.resolve(providerConfig.path, ...args)
+
+    const filepath = resolve(id, '.db', 'metadata.json')
 
     const json: any = filesystem.readSync.json(filepath, {
         default: {
@@ -25,7 +26,7 @@ export function findMetadata(options: Options) {
         },
     })
 
-    const all = filesystem.readdirSync(path.resolve(providerConfig.path, id))
+    const all = filesystem.readdirSync(resolve(id))
 
     const files = [] as any
 
