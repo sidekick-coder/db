@@ -4,6 +4,7 @@
 
 A simple tool to manage your data  
 [npm](https://www.npmjs.com/package/@sidekick-coder/db)
+
 > [!DANGER] The project is in alpha phase, please don't use in production
 </div>
 
@@ -44,6 +45,7 @@ db destroy --where "id=01" # delete item
 - [File](./docs/providers/file.md)
 - [Folder](./docs/providers/folder.md)
 - [Notion](./docs/providers/notion.md)
+- [Vault](./docs/providers/vault.md)
 
 ## Database
 
