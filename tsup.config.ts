@@ -6,6 +6,6 @@ export default defineConfig({
     splitting: false,
     sourcemap: true,
     clean: true,
-    format: 'esm',
+    format: 'cjs',
     tsconfig: path.resolve(__dirname, 'tsconfig.json'),
 })

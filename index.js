@@ -10,7 +10,7 @@ require('dotenv').config({
 })
 
 if (process.env.NODE_ENV !== 'development') {
-    require('./dist/cli.js')
+    require('./dist/cli.cjs')
 }
 
 if (process.env.NODE_ENV === 'development') {
