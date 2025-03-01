@@ -1,4 +1,4 @@
-#! /usr/bin/env node
+import fs from 'fs'
 import minimist from 'minimist'
 import { dirname, resolve } from 'path'
 import { resolve as resolveConfig } from '@/core/config/resolve.js'
@@ -27,6 +27,10 @@ async function run() {
     const [name] = allArgs
 
     const filename = resolve(process.cwd(), flags.file || 'db.config.yml')
+
+    if (!fs.existsSync(filename)) {
+        throw new Error('Config file not found')
+    }
 
     const config = resolveConfig(filename)
 
