@@ -1,7 +1,7 @@
 import sift from 'sift'
 import { Where, WhereCondition } from './types.js'
 import { transformWhere } from '@/core/database/where.js'
-import { omit, pick } from 'lodash-es'
+import { omit, orderBy, pick } from 'lodash-es'
 
 const operatorMap = {
     eq: '$eq',
@@ -79,6 +79,8 @@ interface Options {
     exclude?: string[]
     limit?: number
     offset?: number
+    sortBy?: string[]
+    sortDesc?: boolean[]
 }
 
 export function query(data: any[], options?: Options) {
@@ -98,6 +100,19 @@ export function query(data: any[], options?: Options) {
 
     if (exclude?.length && !options.include.length) {
         items = items.map((item) => omit(item, exclude))
+    }
+
+    if (options.sortBy?.length) {
+        const sort = options.sortBy.map((f, i) => ({
+            field: f,
+            order: options.sortDesc && options.sortDesc[i] ? 'desc' : 'asc',
+        }))
+
+        items = orderBy(
+            items,
+            sort.map((s) => s.field),
+            sort.map((s) => s.order) as ('asc' | 'desc')[]
+        )
     }
 
     items = items.slice(offset, limit ? offset + limit : undefined)

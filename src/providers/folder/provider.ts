@@ -33,6 +33,8 @@ export const provider = defineProvider((config, { root }) => {
         const include = options?.include || []
         const limit = options?.limit
         const page = options?.page || 1
+        const sortBy = options?.sortBy
+        const sortDesc = options?.sortDesc
 
         let files = await drive.list(path, { onlyDirs: true })
 
@@ -62,6 +64,8 @@ export const provider = defineProvider((config, { root }) => {
             include,
             limit,
             offset: page > 1 ? (page - 1) * limit : 0,
+            sortBy,
+            sortDesc,
         })
 
         const meta = {

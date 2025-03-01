@@ -1,6 +1,5 @@
 import * as valibot from 'valibot'
 import { schema as vars } from './vars.js'
-import { resolve } from 'path'
 import * as inquirer from '@inquirer/prompts'
 import type { ValibotSchema } from './types.js'
 import { FilesystemOptionsPath } from '../filesystem/types.js'
@@ -29,7 +28,8 @@ const stringList = valibot.pipe(
 function array<T extends ValibotSchema = ValibotSchema>(s: T) {
     return valibot.pipe(
         v.union([v.array(s), s]),
-        valibot.transform((value) => (Array.isArray(value) ? value : [value]))
+        valibot.transform((value) => (Array.isArray(value) ? value : [value])),
+        valibot.array(s)
     )
 }
 

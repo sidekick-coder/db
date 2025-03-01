@@ -21,6 +21,8 @@ async function run() {
             database: 'db',
             render: 'r',
             render_options: 'ro',
+            sortBy: ['sort-by'],
+            sortDesc: ['sort-desc'],
         },
     })
 
