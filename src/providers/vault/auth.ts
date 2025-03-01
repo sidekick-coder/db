@@ -9,6 +9,7 @@ interface Payload {
     root: string
     options: {
         password: string
+        timeout?: string
     }
 }
 

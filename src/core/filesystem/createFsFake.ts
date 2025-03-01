@@ -134,6 +134,12 @@ export function createFsFake(): FilesystemOptionsFs {
         removeSync(path)
     }
 
+    const removeAt: FilesystemOptionsFs['removeAt'] = async (filepath, milliseconds) => {
+        setTimeout(() => removeSync(filepath), milliseconds)
+
+        return true
+    }
+
     return {
         entries,
 
@@ -154,5 +160,6 @@ export function createFsFake(): FilesystemOptionsFs {
 
         remove,
         removeSync,
+        removeAt,
     }
 }
