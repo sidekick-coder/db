@@ -84,7 +84,7 @@ interface Options {
 export function query(data: any[], options?: Options) {
     const { where, include, exclude } = options
 
-    const limit = options.limit || 20
+    const limit = options.limit
     const offset = options.offset || 0
     const siftQuery = parseWhere(where)
 
@@ -100,7 +100,7 @@ export function query(data: any[], options?: Options) {
         items = items.map((item) => omit(item, exclude))
     }
 
-    items = items.slice(offset, offset + limit)
+    items = items.slice(offset, limit ? offset + limit : undefined)
 
     return items
 }
