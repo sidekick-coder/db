@@ -5,6 +5,7 @@ tsconfig.json
 composables
 types
 playground
-
+src
+docs
 # include
 !dist
