@@ -1,6 +1,16 @@
-type TryCatchPromiseResult<T extends Function> = [Awaited<ReturnType<T>>, null] | [null, Error]
+interface Tryer {
+    (...args: any[]): any
+}
 
-export async function tryCatch<T extends Function>(tryer: T): Promise<TryCatchPromiseResult<T>> {
+interface TryerAsync {
+    (...args: any[]): Promise<any>
+}
+
+type TryCatchResult<T extends Tryer> = [ReturnType<T>, null] | [null, Error]
+
+type TryCatchAsyncResult<T extends TryerAsync> = [Awaited<ReturnType<T>>, null] | [null, Error]
+
+export async function tryCatch<T extends TryerAsync>(tryer: T): Promise<TryCatchAsyncResult<T>> {
     try {
         const result = await tryer()
         return [result, null]
@@ -9,7 +19,7 @@ export async function tryCatch<T extends Function>(tryer: T): Promise<TryCatchPr
     }
 }
 
-tryCatch.sync = function <T extends Function>(tryer: T): TryCatchPromiseResult<T> {
+tryCatch.sync = function <T extends Tryer>(tryer: T): TryCatchResult<T> {
     try {
         const result = tryer()
         return [result, null]

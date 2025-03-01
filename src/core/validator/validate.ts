@@ -35,7 +35,9 @@ export function validate<T extends ValibotSchema>(cb: ValidatePayload<T>, payloa
         }
 
         if (flatten.nested) {
-            Object.entries(flatten.nested).forEach(([key, value]) => {
+            Object.entries(flatten.nested).forEach((entry) => {
+                const [key, value] = entry as [string, string[]]
+
                 messages.push(...value.map((v) => `${key}: ${v}`))
             })
         }

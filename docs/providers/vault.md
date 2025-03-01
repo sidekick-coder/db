@@ -1,6 +1,6 @@
 # Vault Provider 
 
-This provider is used have a database with encrypted items. 
+This provider is used to have a database with encrypted items. 
 
 A password is required to create, update or delete items in the database.
 

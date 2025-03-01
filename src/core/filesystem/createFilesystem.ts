@@ -7,18 +7,18 @@ import { validate, ValidatePayload, ValidateResult } from '../validator/validate
 
 export type Filesystem = ReturnType<typeof createFilesystem>
 
-interface ReadOptions {
+export interface ReadOptions {
     recursive?: boolean
 }
 
-interface ReadJsonOptions extends ReadOptions {
+export interface ReadRecordOptions extends ReadOptions {
     reviver?: (key: any, value: any) => any
     default?: Record<string, any>
     schema?: ValidatePayload
 }
 
 /*  eslint-disable prettier/prettier */
-type ReadOutput<T extends ReadJsonOptions> =
+export type ReadOutput<T extends ReadRecordOptions> =
     T extends { schema: ValidatePayload } ? ValidateResult<T['schema']> | null :
     Record<string, any> | null
 /*  eslint-enable prettier/prettier */
@@ -59,7 +59,7 @@ export function createFilesystem(options: FilesystemOptions = {}) {
         return new TextDecoder().decode(content)
     }
 
-    read.json = async function <T extends ReadJsonOptions>(
+    read.json = async function <T extends ReadRecordOptions>(
         filepath: string,
         options?: T
     ): Promise<ReadOutput<T>> {
@@ -104,7 +104,7 @@ export function createFilesystem(options: FilesystemOptions = {}) {
         return new TextDecoder().decode(content)
     }
 
-    readSync.json = function <T extends ReadJsonOptions>(
+    readSync.json = function <T extends ReadRecordOptions>(
         filepath: string,
         options?: T
     ): ReadOutput<T> {
