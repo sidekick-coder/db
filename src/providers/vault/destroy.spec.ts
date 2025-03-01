@@ -1,3 +1,4 @@
+import crypto from 'crypto'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { destroy } from './destroy.js'
 import { createEncryption } from './encryption.js'
@@ -9,6 +10,7 @@ import { createFilesystemFake } from '@/core/filesystem/createFilesystemFake.js'
 describe('destroy', () => {
     const root = '/vault'
     const filesystem = createFilesystemFake()
+    const resolve = filesystem.path.resolve
 
     const config = validate(configSchema('/', filesystem.path), {
         format: 'json',
@@ -17,13 +19,27 @@ describe('destroy', () => {
         password: 'test-password',
     })
 
-    const encryption = createEncryption().setPassword(config.password)
+    const encryption = createEncryption()
     const parser = parsers.find((p) => p.name === config.format)
 
     beforeEach(() => {
         filesystem.removeSync(root)
 
         filesystem.mkdirSync(root)
+
+        const password = crypto.randomBytes(16).toString('hex')
+        const salt = crypto.randomBytes(16).toString('hex')
+        const iv = crypto.randomBytes(16).toString('hex')
+
+        encryption.setPassword(password).setSalt(salt).setIv(iv)
+
+        filesystem.mkdirSync(resolve(root, '.db'))
+        filesystem.writeSync.text(resolve(root, '.db', 'password'), password)
+        filesystem.writeSync.json('/vault/.db/password.json', {
+            salt,
+            iv,
+            test: encryption.encrypt('success'),
+        })
     })
 
     it('should destroy items based on the provided options', async () => {
@@ -31,10 +47,9 @@ describe('destroy', () => {
 
         const result = await destroy({
             filesystem,
-            providerConfig: config,
-            encryption,
+            root,
             parser,
-            destroyOptions: {
+            options: {
                 where: { id: '01' },
                 limit: 1,
             },
@@ -45,16 +60,15 @@ describe('destroy', () => {
     })
 
     it('should not destroy items if no matching items are found', async () => {
-        const destroyOptions = {
+        const options = {
             where: { id: '03' },
             limit: 1,
         }
 
         const result = await destroy({
             filesystem,
-            destroyOptions,
-            providerConfig: config,
-            encryption,
+            root,
+            options,
             parser,
         })
 

@@ -20,22 +20,35 @@ describe('create', () => {
         password: crypto.randomBytes(16).toString('hex'),
     })
 
-    const encryption = createEncryption({ password: config.password })
+    const encryption = createEncryption()
     const parser = parsers.find((p) => p.name === config.format)
 
     beforeEach(() => {
         filesystem.removeSync(root)
 
         filesystem.mkdirSync(root)
+
+        const password = crypto.randomBytes(16).toString('hex')
+        const salt = crypto.randomBytes(16).toString('hex')
+        const iv = crypto.randomBytes(16).toString('hex')
+
+        encryption.setPassword(password).setSalt(salt).setIv(iv)
+
+        filesystem.mkdirSync(resolve(root, '.db'))
+        filesystem.writeSync.text(resolve(root, '.db', 'password'), password)
+        filesystem.writeSync.json('/vault/.db/password.json', {
+            salt,
+            iv,
+            test: encryption.encrypt('success'),
+        })
     })
 
     it('should create an item in the vault', async () => {
         const result = await create({
             filesystem,
-            encryption,
-            providerConfig: config,
+            root,
             parser,
-            createOptions: { data: { name: 'Item 1' } },
+            options: { data: { name: 'Item 1' } },
             makeId: async () => 'item1',
         })
 
@@ -53,10 +66,9 @@ describe('create', () => {
         const fn = async () =>
             create({
                 filesystem,
-                encryption,
-                providerConfig: config,
+                root,
                 parser,
-                createOptions: { data: { id: 'item1', name: 'Item 1' } },
+                options: { data: { id: 'item1', name: 'Item 1' } },
                 makeId: async () => 'item1',
             })
 
@@ -66,10 +78,9 @@ describe('create', () => {
     it('should check if the created item is encrypted', async () => {
         await create({
             filesystem,
-            encryption,
-            providerConfig: config,
+            root,
             parser,
-            createOptions: { data: { name: 'Item 1' } },
+            options: { data: { name: 'Item 1' } },
             makeId: async () => 'item1',
         })
 

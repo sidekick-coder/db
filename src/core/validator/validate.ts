@@ -12,7 +12,16 @@ export type ValidatorCallbackAsync<T extends ValibotSchemaAsync> = {
 
 export type ValidatorResult<T extends ObjectEntries> = InferOutput<ObjectSchema<T, undefined>>
 
-export function validate<T extends ValibotSchema>(cb: ValidatorCallback<T> | T, payload: any) {
+export type ValidatePayload<T extends ValibotSchema = ValibotSchema> = ValidatorCallback<T> | T
+
+/*  eslint-disable prettier/prettier */
+export type ValidateResult<T extends ValidatePayload> =
+    T extends ValibotSchema ? InferOutput<T> :
+    T extends ValidatorCallback<infer U> ? InferOutput<U> :
+    unknown
+/*  eslint-enable prettier/prettier */
+
+export function validate<T extends ValibotSchema>(cb: ValidatePayload<T>, payload: any) {
     const schema: T = typeof cb === 'function' ? cb(v) : cb
 
     const { output, issues, success } = v.safeParse(schema, payload)

@@ -86,6 +86,7 @@ export function createEncryption(payload?: Partial<EncryptPayload>) {
     }
 
     const instance = {
+        state,
         setSalt: function (salt: string) {
             state.salt = salt
 

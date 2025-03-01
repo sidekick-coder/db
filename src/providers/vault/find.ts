@@ -1,28 +1,25 @@
 import { Config } from './config.js'
 import { Filesystem } from '@/core/filesystem/createFilesystem.js'
-import { Encryption } from './encryption.js'
 import { FindOptions } from '@/core/database/find.js'
 import { list } from './list.js'
 import { Parser } from '@/core/parsers/all.js'
 
-interface Options {
+interface Payload {
     filesystem: Filesystem
-    findOptions: FindOptions
-    providerConfig: Config
-    encryption: Encryption
+    root: string
+    options: FindOptions
     parser: Parser
 }
 
-export async function find(options: Options) {
-    const { filesystem, findOptions, encryption, providerConfig, parser } = options
+export async function find(payload: Payload) {
+    const { filesystem, options, root, parser } = payload
 
     const { data: items } = await list({
         filesystem,
-        providerConfig,
-        encryption,
+        root,
         parser,
-        listOptions: {
-            ...findOptions,
+        options: {
+            ...options,
             limit: 1,
         },
     })

@@ -1,25 +1,21 @@
-import { Config } from './config.js'
 import { Filesystem } from '@/core/filesystem/createFilesystem.js'
-import { Encryption } from './encryption.js'
 import { CreateOptions } from '@/core/database/create.js'
 import { lock } from './lock.js'
-import { find } from './find.js'
 import { Parser } from '@/core/parsers/all.js'
 
-interface Options {
+interface Payload {
     filesystem: Filesystem
-    createOptions: CreateOptions
-    providerConfig: Config
-    encryption: Encryption
+    root: string
+    options: CreateOptions
     makeId: () => Promise<string>
     parser: Parser
 }
 
-export async function create(options: Options) {
-    const { filesystem, encryption, createOptions, providerConfig, makeId, parser } = options
-    const resolve = (...args: string[]) => filesystem.path.resolve(providerConfig.path, ...args)
+export async function create(payload: Payload) {
+    const { filesystem, root, options, makeId, parser } = payload
+    const resolve = (...args: string[]) => filesystem.path.resolve(root, ...args)
 
-    const data = createOptions.data
+    const data = options.data
 
     const id = data.id || (await makeId())
 
@@ -27,26 +23,25 @@ export async function create(options: Options) {
         throw new Error(`Item with id "${id}" already exists`)
     }
 
-    const filename = resolve(id, `index.${parser.ext}`)
+    const folder = resolve(id, `index.${parser.ext}`)
+    const raw = parser.stringify(data)
 
     filesystem.mkdirSync(resolve(id))
 
-    filesystem.writeSync.text(filename, parser.stringify(data))
+    filesystem.writeSync.text(folder, raw)
 
     await lock({
         id,
-        encryption,
         filesystem,
-        providerConfig,
+        root,
     })
 
-    const item = await find({
-        filesystem,
-        findOptions: { where: { id: String(id) }, limit: 1 },
-        providerConfig,
-        encryption,
-        parser,
-    })
+    const item = {
+        id,
+        raw,
+        folder,
+        ...data,
+    }
 
-    return item!
+    return item
 }

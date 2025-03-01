@@ -1,28 +1,33 @@
 import { Config } from './config.js'
 import { Filesystem } from '@/core/filesystem/createFilesystem.js'
-import { Encryption } from './encryption.js'
+import { createEncryption, Encryption } from './encryption.js'
 import { findMetadata } from './findMetadata.js'
+import { findPassword } from './findPassword.js'
 
 interface Options {
     id: string
-    encryption: Encryption
+    root: string
     filesystem: Filesystem
-    providerConfig: Config
 }
 
 export async function lock(options: Options) {
-    const { filesystem, encryption, providerConfig, id } = options
-    const resolve = (...args: string[]) => filesystem.path.resolve(providerConfig.path, ...args)
+    const { filesystem, root, id } = options
+    const resolve = (...args: string[]) => filesystem.path.resolve(root, ...args)
 
     const filepath = resolve(options.id)
 
-    if (!filesystem.existsSync(filepath)) {
+    if (!filesystem.existsSync(resolve(options.id))) {
         throw new Error(`Item ${options.id} not found in ${filepath}`)
     }
 
-    const metadata = findMetadata({ id: id, filesystem, providerConfig })
+    const password = findPassword({ filesystem, root })
+    const metadata = findMetadata({ id: id, filesystem, root })
 
-    encryption.setSalt(metadata.salt).setIv(metadata.iv)
+    const encryption = createEncryption({
+        password,
+        salt: metadata.salt,
+        iv: metadata.iv,
+    })
 
     for (const file of metadata.files) {
         if (file.encrypted) {

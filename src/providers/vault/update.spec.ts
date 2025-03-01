@@ -22,13 +22,27 @@ describe('update', () => {
         password: crypto.randomBytes(16).toString('hex'),
     })
 
-    const encryption = createEncryption({ password: config.password })
+    const encryption = createEncryption()
     const parser = parsers.find((p) => p.name === config.format)
 
     beforeEach(() => {
         filesystem.removeSync(root)
 
         filesystem.mkdirSync(root)
+
+        const password = crypto.randomBytes(16).toString('hex')
+        const salt = crypto.randomBytes(16).toString('hex')
+        const iv = crypto.randomBytes(16).toString('hex')
+
+        encryption.setPassword(password).setSalt(salt).setIv(iv)
+
+        filesystem.mkdirSync(resolve(root, '.db'))
+        filesystem.writeSync.text(resolve(root, '.db', 'password'), password)
+        filesystem.writeSync.json('/vault/.db/password.json', {
+            salt,
+            iv,
+            test: encryption.encrypt('success'),
+        })
     })
 
     it('should update an item in the vault', async () => {
@@ -40,10 +54,9 @@ describe('update', () => {
 
         const result = await update({
             filesystem,
-            encryption,
-            providerConfig: config,
+            root,
             parser,
-            updateOptions: { where: { id: 'item1' }, data: { name: 'Updated Item 1' } },
+            options: { where: { id: 'item1' }, data: { name: 'Updated Item 1' } },
         })
 
         expect(result.count).toBe(1)
@@ -68,10 +81,9 @@ describe('update', () => {
 
         const result = await update({
             filesystem,
-            encryption,
-            providerConfig: config,
+            root,
             parser,
-            updateOptions: { where: {}, data: { description: 'Updated description' } },
+            options: { where: {}, data: { description: 'Updated description' } },
         })
 
         expect(result.count).toBe(2)
@@ -102,10 +114,9 @@ describe('update', () => {
 
         const result = await update({
             filesystem,
-            encryption,
-            providerConfig: config,
+            root,
             parser,
-            updateOptions: { where: { id: 'nonexistent' }, data: { name: 'Updated Item' } },
+            options: { where: { id: 'nonexistent' }, data: { name: 'Updated Item' } },
         })
 
         expect(result.count).toBe(0)
@@ -124,27 +135,24 @@ describe('update', () => {
 
         await lock({
             id: 'item1',
-            encryption,
+            root,
             filesystem,
-            providerConfig: config,
         })
 
         const result = await update({
             filesystem,
-            encryption,
-            providerConfig: config,
+            root,
             parser,
-            updateOptions: { where: { id: 'item1' }, data: { name: 'Updated Item 1' } },
+            options: { where: { id: 'item1' }, data: { name: 'Updated Item 1' } },
         })
 
         expect(result.count).toBe(1)
 
         const updatedItem = await find({
             filesystem,
-            encryption,
-            providerConfig: config,
+            root,
             parser,
-            findOptions: { where: { id: 'item1' }, limit: 1 },
+            options: { where: { id: 'item1' }, limit: 1 },
         })
 
         expect(updatedItem).toEqual(expect.objectContaining({ name: 'Updated Item 1' }))

@@ -1,3 +1,4 @@
+import crypto from 'crypto'
 import { describe, it, expect, beforeEach } from 'vitest'
 import { find } from './find.js'
 import { createEncryption } from './encryption.js'
@@ -9,48 +10,61 @@ import { createFilesystemFake } from '@/core/filesystem/createFilesystemFake.js'
 
 describe('find', () => {
     const filesystem = createFilesystemFake()
+    const resolve = filesystem.path.resolve
     const root = '/vault'
     const config = validate(configSchema('/', filesystem.path), {
         format: 'json',
         path: root,
         id_strategy: 'increment',
-        password: 'test-password',
     })
-    const encryption = createEncryption().setPassword(config.password)
+    const encryption = createEncryption()
     const parser = parsers.find((p) => p.name === config.format)
-    const resolve = (...args: string[]) => filesystem.path.resolve(root, ...args)
 
     beforeEach(() => {
         filesystem.removeSync(root)
 
         filesystem.mkdirSync(root)
+
+        const password = crypto.randomBytes(16).toString('hex')
+        const salt = crypto.randomBytes(16).toString('hex')
+        const iv = crypto.randomBytes(16).toString('hex')
+
+        encryption.setPassword(password).setSalt(salt).setIv(iv)
+
+        filesystem.mkdirSync(resolve(root, '.db'))
+        filesystem.writeSync.text(resolve(root, '.db', 'password'), password)
+        filesystem.writeSync.json('/vault/.db/password.json', {
+            salt,
+            iv,
+            test: encryption.encrypt('success'),
+        })
     })
 
     it('should find an item in the vault', async () => {
-        filesystem.mkdirSync(resolve('item1'))
-        filesystem.writeSync.json(resolve('item1', 'index.json'), {
-            id: 'item1',
+        const payload = {
             name: 'Item 1',
+        }
+
+        filesystem.writeSync.json(resolve(root, 'item1', 'index.json'), payload, {
+            recursive: true,
         })
 
         const result = await find({
             filesystem,
-            encryption,
-            providerConfig: config,
+            root,
             parser,
-            findOptions: { where: { id: 'item1' } },
+            options: { where: { id: 'item1' } },
         })
 
-        expect(result).toEqual(expect.objectContaining({ id: 'item1', name: 'Item 1' }))
+        expect(result).toEqual(expect.objectContaining(payload))
     })
 
     it('should return null if item is not found', async () => {
         const result = await find({
             filesystem,
-            encryption,
-            providerConfig: config,
+            root,
             parser,
-            findOptions: { where: { id: 'nonexistent' } },
+            options: { where: { id: 'nonexistent' } },
         })
 
         expect(result).toBeNull()
@@ -60,22 +74,21 @@ describe('find', () => {
         const payload = {
             name: 'Item 1',
         }
+
         filesystem.mkdirSync(`${root}/item1`)
         filesystem.writeSync.json(`${root}/item1/index.json`, payload)
 
         await lock({
             id: 'item1',
-            encryption,
+            root,
             filesystem,
-            providerConfig: config,
         })
 
         const result = await find({
             filesystem,
-            encryption,
-            providerConfig: config,
+            root,
             parser,
-            findOptions: { where: { id: 'item1' } },
+            options: { where: { id: 'item1' } },
         })
 
         expect(result).toEqual(expect.objectContaining(payload))

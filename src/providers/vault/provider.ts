@@ -1,14 +1,11 @@
 import { defineProvider } from '@/core/provider/defineProvider.js'
 import { validate } from '@/core/validator/index.js'
 import { DataProvider } from '@/core/provider/index.js'
-import crypto from 'crypto'
 import { drive } from '@/core/drive/index.js'
-import path from 'path'
 import { createFilesystem } from '@/core/filesystem/createFilesystem.js'
 import { parsers } from '@/core/parsers/all.js'
 import { createIdMaker } from '@/core/id/index.js'
 import { createIncrementalStategyFromFile } from '@/core/id/incremental.js'
-import { createEncryption, decrypt, encrypt } from './encryption.js'
 import { schema as configSchema } from './config.js'
 import { list as vaultList } from './list.js'
 import { find as vaultFind } from './find.js'
@@ -17,12 +14,13 @@ import { update as vaultUpdate } from './update.js'
 import { destroy as vaultDestroy } from './destroy.js'
 import { lock as vaultLock } from './lock.js'
 import { unlock as vaultUnlock } from './unlock.js'
-import { setPassword as vaultSetPassword } from './setPassword.js'
+import { init as vaultInit } from './init.js'
+import { auth as vaultAuth } from './auth.js'
 
 export const provider = defineProvider((payload, { root, fs }) => {
     const config = validate(configSchema(root), payload)
     const filesystem = createFilesystem({ fs })
-    const encryption = createEncryption()
+    const resolve = (...args: string[]) => filesystem.path.resolve(config.path, ...args)
 
     // parser
     const parser = parsers.find((p) => p.name === config.format)
@@ -33,52 +31,26 @@ export const provider = defineProvider((payload, { root, fs }) => {
 
     // id maker
     const maker = createIdMaker({
-        strategies: [
-            createIncrementalStategyFromFile(
-                drive,
-                path.resolve(config.path, '.db', 'last_id.json')
-            ),
-        ],
+        strategies: [createIncrementalStategyFromFile(drive, resolve('.db', 'last_id.json'))],
     })
 
     const makeId = () => maker(config.id_strategy)
 
-    // password
-    const password = validate((v) => v.string(), payload.password)
-
-    const filename = path.resolve(config.path, '.db', 'password.json')
-
-    if (!drive.existsSync(filename)) {
-        return {
-            valid: false,
-            message: 'No password set',
-        }
-    }
-
-    const data = filesystem.readSync.json(filename)
-
-    encryption.setPassword(password)
-
-    const decrypted = encryption
-        .setSalt(data.salt)
-        .setIv(data.iv)
-        .decrypt(data.encrypted as string)
-
-    if (!decrypted.endsWith('success')) {
-        throw new Error('Password incorrect')
-    }
-
     // methods
-    function setPassword(payload: any) {
-        const salt = crypto.randomBytes(16).toString('hex')
-        const iv = crypto.randomBytes(16).toString('hex')
 
-        return vaultSetPassword({
+    async function init(payload: any) {
+        return vaultInit({
             filesystem,
-            password: payload.password,
-            providerConfig: config,
-            salt,
-            iv,
+            root: config.path,
+            options: payload,
+        })
+    }
+
+    async function auth(payload: any) {
+        return vaultAuth({
+            filesystem,
+            root: config.path,
+            options: payload,
         })
     }
 
@@ -87,9 +59,8 @@ export const provider = defineProvider((payload, { root, fs }) => {
 
         return vaultLock({
             id,
-            encryption,
+            root: config.path,
             filesystem,
-            providerConfig: config,
         })
     }
 
@@ -98,40 +69,35 @@ export const provider = defineProvider((payload, { root, fs }) => {
 
         return vaultUnlock({
             id,
-            encryption,
+            root: config.path,
             filesystem,
-            providerConfig: config,
         })
     }
 
     const list: DataProvider['list'] = async (options) => {
         return vaultList({
             filesystem,
-            encryption,
-            providerConfig: config,
+            root: config.path,
             parser,
-            listOptions: options,
+            options: options,
         })
     }
 
     const find: DataProvider['find'] = async (options) => {
         return vaultFind({
             filesystem,
-            encryption,
-            providerConfig: config,
+            root: config.path,
             parser,
-            findOptions: options,
-            makeId,
+            options: options,
         })
     }
 
-    const create: DataProvider['create'] = async (payload) => {
+    const create: DataProvider['create'] = async (options) => {
         return vaultCreate({
             filesystem,
-            encryption,
-            providerConfig: config,
+            root: config.path,
             parser,
-            createOptions: payload,
+            options,
             makeId,
         })
     }
@@ -139,10 +105,9 @@ export const provider = defineProvider((payload, { root, fs }) => {
     const update: DataProvider['update'] = async (payload) => {
         return vaultUpdate({
             filesystem,
-            encryption,
-            providerConfig: config,
+            root: config.path,
             parser,
-            updateOptions: payload,
+            options: payload,
         })
     }
 
@@ -150,16 +115,12 @@ export const provider = defineProvider((payload, { root, fs }) => {
         return vaultDestroy({
             filesystem,
             parser,
-            encryption,
-            providerConfig: config,
-            destroyOptions: payload,
+            root: config.path,
+            options: payload,
         })
     }
 
     return {
-        setPassword,
-        encrypt,
-        decrypt,
         lock,
         unlock,
         list,
@@ -167,5 +128,7 @@ export const provider = defineProvider((payload, { root, fs }) => {
         create,
         update,
         destroy,
+        auth,
+        init,
     }
 })

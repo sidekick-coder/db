@@ -1,6 +1,9 @@
+import cp from 'child_process'
 import fs from 'fs'
+import os from 'os'
 import { FilesystemOptionsFs } from './types.js'
 import { tryCatch } from '@/utils/tryCatch.js'
+import { join } from 'path'
 
 export function createFsNode(): FilesystemOptionsFs {
     const exists: FilesystemOptionsFs['exists'] = async (path: string) => {
@@ -95,6 +98,35 @@ export function createFsNode(): FilesystemOptionsFs {
         }
     }
 
+    const removeAt = async (path: string, milliseconds: number) => {
+        // if is windows
+        if (os.platform() === 'win32') {
+            const script = `
+                Set objShell = CreateObject("WScript.Shell")
+                objShell.Run "cmd /c timeout /t ${milliseconds / 1000} && del /f /q ${path}", 0, True
+            `
+
+            const key = Math.random().toString(36).substring(7)
+
+            const tempScriptPath = join(os.tmpdir(), `db-delete-file-${key}.vbs`)
+
+            // Write the VBScript to a temporary file
+            fs.writeFileSync(tempScriptPath, script)
+
+            // Execute the VBScript to run the command silently
+            const child = cp.spawn('cscript.exe', [tempScriptPath], {
+                detached: true,
+                stdio: 'ignore',
+            })
+
+            child.unref()
+
+            return true
+        }
+
+        return false
+    }
+
     return {
         exists,
         existsSync,
@@ -113,5 +145,6 @@ export function createFsNode(): FilesystemOptionsFs {
 
         remove,
         removeSync,
+        removeAt,
     }
 }

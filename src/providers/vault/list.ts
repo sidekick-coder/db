@@ -1,33 +1,39 @@
 import { ListOptions } from '@/core/database/list.js'
-import { Config } from './config.js'
 import { Filesystem } from '@/core/filesystem/createFilesystem.js'
-import { Encryption } from './encryption.js'
+import { createEncryption } from './encryption.js'
 import { count, query } from '@/core/provider/queryArray.js'
 import { findMetadata } from './findMetadata.js'
+import { Parser } from '@/core/parsers/all.js'
+import { findPassword } from './findPassword.js'
 
-interface Options {
+interface Payload {
     filesystem: Filesystem
-    listOptions: ListOptions
-    providerConfig: Config
-    encryption: Encryption
-    parser: {
-        ext: string
-        parse: (raw: string) => Record<string, any>
-    }
+    root: string
+    options?: ListOptions
+    parser: Parser
 }
 
-export async function list(options: Options) {
-    const { filesystem, encryption, listOptions, providerConfig, parser } = options
+export async function list(payload: Payload) {
+    const { filesystem, root, options, parser } = payload
 
-    const resolve = (...args: string[]) => filesystem.path.resolve(providerConfig.path, ...args)
+    const resolve = (...args: string[]) => filesystem.path.resolve(root, ...args)
 
-    const where = listOptions?.where || {}
-    const exclude = listOptions?.exclude || []
-    const include = listOptions?.include || []
-    const limit = listOptions?.limit
-    const page = listOptions?.page || 1
+    const password = findPassword({
+        filesystem,
+        root,
+    })
 
-    const files = filesystem.readdirSync(providerConfig.path)
+    const encryption = createEncryption({
+        password,
+    })
+
+    const where = options?.where || {}
+    const exclude = options?.exclude || []
+    const include = options?.include || []
+    const limit = options?.limit
+    const page = options?.page || 1
+
+    const files = filesystem.readdirSync(root)
     const excludePatterns = ['.db']
 
     const result = [] as any[]
@@ -39,7 +45,7 @@ export async function list(options: Options) {
 
         const metadata = findMetadata({
             filesystem,
-            providerConfig,
+            root,
             id: folder,
         })
 
@@ -52,7 +58,7 @@ export async function list(options: Options) {
         const basename = filesystem.path.basename(filename)
 
         if (!filesystem.existsSync(filename)) {
-            const error = new Error('Index file not found')
+            const error = new Error(`Index file not found at ${filename}`)
 
             Object.assign(error, {
                 folder: resolve(folder),

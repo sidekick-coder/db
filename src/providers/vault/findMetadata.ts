@@ -1,20 +1,19 @@
 import crypto from 'crypto'
 
 import { Filesystem } from '@/core/filesystem/createFilesystem.js'
-import { Config } from './config.js'
 import { v } from '@/core/validator/valibot.js'
 import { validate } from '@/core/validator/validate.js'
 
 interface Options {
     id: string
     filesystem: Filesystem
-    providerConfig: Config
+    root: string
 }
 
 export function findMetadata(options: Options) {
-    const { filesystem, providerConfig, id } = options
+    const { filesystem, root, id } = options
 
-    const resolve = (...args: string[]) => filesystem.path.resolve(providerConfig.path, ...args)
+    const resolve = (...args: string[]) => filesystem.path.resolve(root, ...args)
 
     const filepath = resolve(id, '.db', 'metadata.json')
 
@@ -31,7 +30,7 @@ export function findMetadata(options: Options) {
     const files = [] as any
 
     all.filter((file) => file !== '.db').forEach((file) => {
-        const meta = json.files.find((f: any) => f.name === file)
+        const meta = json.files?.find((f: any) => f.name === file)
 
         files.push({
             name: file,

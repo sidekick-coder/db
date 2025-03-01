@@ -1,34 +1,42 @@
 import { Config } from './config.js'
 import { Filesystem } from '@/core/filesystem/createFilesystem.js'
-import { Encryption } from './encryption.js'
+import { createEncryption, Encryption } from './encryption.js'
 import { Parser } from '@/core/parsers/all.js'
 import { UpdateOptions } from '@/core/database/update.js'
 import { list } from './list.js'
 import { findMetadata } from './findMetadata.js'
 import { omit } from 'lodash-es'
+import { findPassword } from './findPassword.js'
 
-interface Options {
+interface Payload {
     filesystem: Filesystem
-    updateOptions: UpdateOptions
-    providerConfig: Config
-    encryption: Encryption
+    root: string
+    options: UpdateOptions
     parser: Parser
 }
 
-export async function update(options: Options) {
-    const { filesystem, encryption, updateOptions, providerConfig, parser } = options
-    const resolve = (...args: string[]) => filesystem.path.resolve(providerConfig.path, ...args)
+export async function update(payload: Payload) {
+    const { filesystem, root, options, parser } = payload
+    const resolve = (...args: string[]) => filesystem.path.resolve(root, ...args)
 
-    const data = updateOptions.data
+    const password = findPassword({
+        filesystem,
+        root,
+    })
+
+    const encryption = createEncryption({
+        password,
+    })
+
+    const data = options.data
 
     const { data: items } = await list({
         filesystem,
-        providerConfig,
-        encryption,
+        root,
         parser,
-        listOptions: {
-            where: updateOptions.where,
-            limit: updateOptions.limit,
+        options: {
+            where: options.where,
+            limit: options.limit,
         },
     })
 
@@ -40,7 +48,7 @@ export async function update(options: Options) {
         const metadata = findMetadata({
             id,
             filesystem,
-            providerConfig,
+            root,
         })
 
         encryption.setSalt(metadata.salt).setIv(metadata.iv)

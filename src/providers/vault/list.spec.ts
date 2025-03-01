@@ -17,16 +17,29 @@ describe('list', () => {
         format: 'json',
         path: root,
         id_strategy: 'increment',
-        password: crypto.randomBytes(16).toString('hex'),
     })
 
-    const encryption = createEncryption({ password: config.password })
+    const encryption = createEncryption()
     const parser = parsers.find((p) => p.name === config.format)
 
     beforeEach(() => {
         filesystem.removeSync(root)
 
         filesystem.mkdirSync(root)
+
+        const password = crypto.randomBytes(16).toString('hex')
+        const salt = crypto.randomBytes(16).toString('hex')
+        const iv = crypto.randomBytes(16).toString('hex')
+
+        encryption.setPassword(password).setSalt(salt).setIv(iv)
+
+        filesystem.mkdirSync(resolve(root, '.db'))
+        filesystem.writeSync.text(resolve(root, '.db', 'password'), password)
+        filesystem.writeSync.json('/vault/.db/password.json', {
+            salt,
+            iv,
+            test: encryption.encrypt('success'),
+        })
     })
 
     it('should list items in the vault', async () => {
@@ -39,10 +52,8 @@ describe('list', () => {
 
         const result = await list({
             filesystem,
-            encryption,
-            providerConfig: config,
+            root,
             parser,
-            listOptions: {},
         })
 
         expect(result.data).toHaveLength(2)
@@ -64,10 +75,9 @@ describe('list', () => {
 
         const result = await list({
             filesystem,
-            encryption,
-            providerConfig: config,
+            root,
             parser,
-            listOptions: { where: { name: 'Item 1' } },
+            options: { where: { name: 'Item 1' } },
         })
 
         expect(result.data).toHaveLength(1)
@@ -84,17 +94,15 @@ describe('list', () => {
 
         await lock({
             id: 'item1',
-            encryption,
+            root,
             filesystem,
-            providerConfig: config,
         })
 
         const result = await list({
             filesystem,
-            encryption,
-            providerConfig: config,
+            root,
             parser,
-            listOptions: {},
+            options: {},
         })
 
         expect(result.data).toHaveLength(2)

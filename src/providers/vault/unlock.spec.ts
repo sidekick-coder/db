@@ -3,8 +3,6 @@ import { describe, expect, it, beforeEach } from 'vitest'
 import { createFilesystemFake } from '@/core/filesystem/createFilesystemFake.js'
 import { unlock } from './unlock.js'
 import { createEncryption } from './encryption.js'
-import { validate } from '@/core/validator/validate.js'
-import { schema as configSchema } from './config.js'
 import { lock } from './lock.js'
 
 describe('unlock', () => {
@@ -12,19 +10,26 @@ describe('unlock', () => {
     const resolve = filesystem.path.resolve
     const root = resolve('vault')
 
-    const config = validate(configSchema('/', filesystem.path), {
-        format: 'json',
-        path: root,
-        id_strategy: 'increment',
-        password: crypto.randomBytes(16).toString('hex'),
-    })
-
-    const encryption = createEncryption({ password: config.password })
+    const encryption = createEncryption()
 
     beforeEach(() => {
         filesystem.removeSync(root)
 
         filesystem.mkdirSync(root)
+
+        const password = crypto.randomBytes(16).toString('hex')
+        const salt = crypto.randomBytes(16).toString('hex')
+        const iv = crypto.randomBytes(16).toString('hex')
+
+        encryption.setPassword(password).setSalt(salt).setIv(iv)
+
+        filesystem.mkdirSync(resolve(root, '.db'))
+        filesystem.writeSync.text(resolve(root, '.db', 'password'), password)
+        filesystem.writeSync.json('/vault/.db/password.json', {
+            salt,
+            iv,
+            test: encryption.encrypt('success'),
+        })
     })
 
     it('should unlock an item in the vault', async () => {
@@ -36,16 +41,14 @@ describe('unlock', () => {
 
         await lock({
             id: 'item1',
-            encryption,
+            root,
             filesystem,
-            providerConfig: config,
         })
 
         const result = await unlock({
             id: 'item1',
-            encryption,
+            root,
             filesystem,
-            providerConfig: config,
         })
 
         expect(result).toEqual(
@@ -63,32 +66,29 @@ describe('unlock', () => {
         await expect(
             unlock({
                 id: 'nonexistent',
-                encryption,
+                root,
                 filesystem,
-                providerConfig: config,
             })
-        ).rejects.toThrow('Metadata file not found')
+        ).rejects.toThrow('Item nonexistent not found in /vault/nonexistent')
     })
 
     it('should unlock an item when it is encrypted by lock function', async () => {
-        filesystem.mkdirSync(`${root}/item1`)
-        filesystem.writeSync.text(
+        filesystem.writeSync.json(
             `${root}/item1/index.json`,
-            JSON.stringify({ id: 'item1', name: 'Item 1' })
+            { name: 'Item 1' },
+            { recursive: true }
         )
 
         await lock({
             id: 'item1',
-            encryption,
+            root,
             filesystem,
-            providerConfig: config,
         })
 
         const result = await unlock({
             id: 'item1',
-            encryption,
+            root,
             filesystem,
-            providerConfig: config,
         })
 
         expect(result).toEqual(
@@ -96,7 +96,9 @@ describe('unlock', () => {
                 expect.objectContaining({ name: 'index.json', encrypted: false }),
             ])
         )
-        const unlockedItem = JSON.parse(filesystem.readSync.text(`${root}/item1/index.json`))
-        expect(unlockedItem).toEqual(expect.objectContaining({ id: 'item1', name: 'Item 1' }))
+
+        const item = filesystem.readSync.json(`${root}/item1/index.json`)
+
+        expect(item).toEqual(expect.objectContaining({ name: 'Item 1' }))
     })
 })

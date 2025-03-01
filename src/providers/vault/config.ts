@@ -9,5 +9,4 @@ export const schema = (dirname: string, path = createPathNode()) =>
         format: v.optional(v.string(), 'markdown'),
         path: v.extras.path(dirname, path),
         id_strategy: v.optional(v.string(), 'increment'),
-        password: v.string('Password is required'),
     })
