@@ -1,6 +1,6 @@
 {
     "name": "@sidekick-coder/db",
-    "version": "0.5.0",
+    "version": "0.6.0",
     "description": "Cli Tool to manipulate data from diferent sources",
     "main": "index.js",
     "type": "module",
