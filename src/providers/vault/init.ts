@@ -7,10 +7,10 @@ interface Payload {
     filesystem: Filesystem
     root: string
     options: {
-        salt: string
-        iv: string
         password: string
-        force: boolean
+        salt?: string
+        iv?: string
+        force?: boolean
     }
 }
 
@@ -31,9 +31,9 @@ export async function init(payload: Payload) {
     const options = await validate.async(
         (v) =>
             v.objectAsync({
+                password: v.prompts.password(),
                 salt: v.optional(v.string(), crypto.randomBytes(16).toString('hex')),
                 iv: v.optional(v.string(), crypto.randomBytes(16).toString('hex')),
-                password: v.prompts.password(),
                 force: v.optional(v.boolean(), false),
             }),
         payload.options
@@ -50,8 +50,8 @@ export async function init(payload: Payload) {
     const test = encryption.encrypt(crypto.randomBytes(16).toString('hex') + 'success')
 
     const json = {
-        salt: options.salt,
-        iv: options.iv,
+        salt,
+        iv,
         test,
     }
 
@@ -60,7 +60,7 @@ export async function init(payload: Payload) {
     })
 
     return {
-        message: 'Password set',
+        message: 'Vault database initialized',
         filename,
         ...json,
     }
