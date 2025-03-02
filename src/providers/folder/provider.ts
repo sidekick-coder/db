@@ -7,6 +7,7 @@ import { createIdMaker } from '@/core/id/index.js'
 import { createIncrementalStategyFromFile } from '@/core/id/incremental.js'
 import { parsers } from '@/core/parsers/index.js'
 import { v, validate } from '@/core/validator/index.js'
+import { omit } from 'lodash-es'
 
 export const provider = defineProvider((config, { root }) => {
     const schema = v.object({
@@ -115,10 +116,14 @@ export const provider = defineProvider((config, { root }) => {
         const page = await list({ where })
         const items = page.data
 
+        const hideKeys = ['id', 'folder', 'raw']
+
         for (const item of items) {
             const filename = resolve(path, item.id, `index.${parser.ext}`)
 
-            await drive.write(filename, parser.stringify(data))
+            const properties = omit({ ...item, ...data }, hideKeys)
+
+            await drive.write(filename, parser.stringify(properties))
         }
 
         return { count: items.length }
