@@ -1,7 +1,7 @@
 import { Filesystem } from '@/core/filesystem/createFilesystem.js'
 import { CreateOptions } from '@/core/database/create.js'
-import { lock } from './lock.js'
 import { Parser } from '@/core/parsers/all.js'
+import { lockItem } from './lockItem.js'
 
 interface Payload {
     filesystem: Filesystem
@@ -30,10 +30,10 @@ export async function create(payload: Payload) {
 
     filesystem.writeSync.text(folder, raw)
 
-    await lock({
-        id,
+    await lockItem({
         filesystem,
         root,
+        options: { id },
     })
 
     const item = {

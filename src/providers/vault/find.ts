@@ -1,4 +1,3 @@
-import { Config } from './config.js'
 import { Filesystem } from '@/core/filesystem/createFilesystem.js'
 import { FindOptions } from '@/core/database/find.js'
 import { list } from './list.js'

@@ -1,6 +1,5 @@
-import { Config } from './config.js'
 import { Filesystem } from '@/core/filesystem/createFilesystem.js'
-import { createEncryption, Encryption } from './encryption.js'
+import { createEncryption } from './encryption.js'
 import { Parser } from '@/core/parsers/all.js'
 import { UpdateOptions } from '@/core/database/update.js'
 import { list } from './list.js'
@@ -40,7 +39,7 @@ export async function update(payload: Payload) {
         },
     })
 
-    const hideKeys = ['id', 'folder', 'raw', 'encrypted']
+    const hideKeys = ['id', 'folder', 'raw', 'lock']
 
     for (const item of items) {
         const id = item.id

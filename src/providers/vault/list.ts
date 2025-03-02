@@ -83,7 +83,7 @@ export async function list(payload: Payload) {
             id: folder.replace(`.${parser.ext}`, ''),
             folder: resolve(folder),
             raw: rawText,
-            encrypted: fileMeta?.encrypted || false,
+            lock: fileMeta?.encrypted || false,
         }
 
         Object.assign(item, parser.parse(rawText))
