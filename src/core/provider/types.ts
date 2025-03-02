@@ -42,11 +42,11 @@ export interface ListResponse {
 }
 
 export interface DataProvider {
-    list?: (options: ListOptions) => Promise<ListResponse>
-    find?: (options: FindOptions) => Promise<DataItem | null>
-    create?: (options: CreateOptions) => Promise<DataItem>
-    update?: (options: UpdateOptions) => Promise<{ count: number }>
-    destroy?: (options: DestroyOptions) => Promise<{ count: number }>
+    list: (options: ListOptions) => Promise<ListResponse>
+    find: (options: FindOptions) => Promise<DataItem | null>
+    create: (options: CreateOptions) => Promise<DataItem>
+    update: (options: UpdateOptions) => Promise<{ count: number }>
+    destroy: (options: DestroyOptions) => Promise<{ count: number }>
 }
 
 export interface DataProviderInstanceOptions {
@@ -55,5 +55,5 @@ export interface DataProviderInstanceOptions {
 }
 
 export interface MountDataProvider {
-    (config: any, instanceConfig: DataProviderInstanceOptions): DataProvider
+    (config: any, instanceConfig: DataProviderInstanceOptions): Partial<DataProvider>
 }
