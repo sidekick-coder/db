@@ -7,7 +7,7 @@ import { confirm } from '@inquirer/prompts'
 import { vWithExtras as v, validate } from '@/core/validator/index.js'
 import { camelCase, merge, omit, snakeCase } from 'lodash-es'
 import { createRenderer } from './core/render/createRenderer.js'
-import consoleRender from './renders/console.js'
+import { consoleRender } from './renders/index.js'
 import { createDatabase } from './core/database/index.js'
 
 async function run() {

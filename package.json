@@ -42,6 +42,11 @@
             "types": "./dist/core/database/index.d.ts",
             "import": "./dist/core/database/index.js",
             "require": "./dist/core/database/index.cjs"
+        },
+        "./renders": {
+            "types": "./dist/core/renders/index.d.ts",
+            "import": "./dist/core/renders/index.js",
+            "require": "./dist/core/renders/index.cjs"
         }
     },
     "scripts": {

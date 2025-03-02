@@ -5,7 +5,7 @@ import { createEncryption } from './encryption.js'
 import { validate } from '@/core/validator/validate.js'
 import { schema as configSchema } from './config.js'
 import { parsers } from '@/core/parsers/all.js'
-import { lock } from './lock.js'
+import { lockItem } from './lockItem.js'
 import { createFilesystemFake } from '@/core/filesystem/createFilesystemFake.js'
 
 describe('find', () => {
@@ -78,10 +78,10 @@ describe('find', () => {
         filesystem.mkdirSync(`${root}/item1`)
         filesystem.writeSync.json(`${root}/item1/index.json`, payload)
 
-        await lock({
-            id: 'item1',
+        await lockItem({
             root,
             filesystem,
+            options: { id: 'item1' },
         })
 
         const result = await find({

@@ -1,10 +1,10 @@
 import crypto from 'crypto'
 import { describe, expect, it, beforeEach } from 'vitest'
-import { lock } from './lock.js'
+import { lockItem } from './lockItem.js'
 import { createEncryption } from './encryption.js'
 import { createFilesystemFake } from '@/core/filesystem/createFilesystemFake.js'
 
-describe('lock', () => {
+describe('lockItem', () => {
     const filesystem = createFilesystemFake()
     const resolve = filesystem.path.resolve
     const root = resolve('vault')
@@ -46,10 +46,10 @@ describe('lock', () => {
             { recursive: true }
         )
 
-        await lock({
-            id: 'item1',
+        await lockItem({
             filesystem,
             root,
+            options: { id: 'item1' },
         })
 
         expect(filesystem.existsSync(itemPath('index.json'))).toBe(false)
@@ -58,10 +58,10 @@ describe('lock', () => {
 
     it('should throw an error if item is not found', async () => {
         await expect(
-            lock({
+            lockItem({
                 filesystem,
                 root,
-                id: 'nonexistent',
+                options: { id: 'nonexistent' },
             })
         ).rejects.toThrow('Item nonexistent not found')
     })

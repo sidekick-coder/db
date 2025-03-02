@@ -9,6 +9,7 @@ import { schema as configSchema } from './config.js'
 import { parsers } from '@/core/parsers/all.js'
 import { lock } from './lock.js'
 import { find } from './find.js'
+import { lockItem } from './lockItem.js'
 
 describe('update', () => {
     const filesystem = createFilesystemFake()
@@ -133,10 +134,10 @@ describe('update', () => {
             { recursive: true }
         )
 
-        await lock({
-            id: 'item1',
+        await lockItem({
             root,
             filesystem,
+            options: { id: 'item1' },
         })
 
         const result = await update({

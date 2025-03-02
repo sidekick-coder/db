@@ -5,7 +5,7 @@ import { createEncryption } from './encryption.js'
 import { validate } from '@/core/validator/validate.js'
 import { schema as configSchema } from './config.js'
 import { parsers } from '@/core/parsers/all.js'
-import { lock } from './lock.js'
+import { lockItem } from './lockItem.js'
 import { createFilesystemFake } from '@/core/filesystem/createFilesystemFake.js'
 
 describe('list', () => {
@@ -92,10 +92,12 @@ describe('list', () => {
         filesystem.mkdirSync(resolve(root, 'item2'))
         filesystem.writeSync.json(resolve(root, 'item2', 'index.json'), { name: 'Item 2' })
 
-        await lock({
-            id: 'item1',
+        await lockItem({
             root,
             filesystem,
+            options: {
+                id: 'item1',
+            },
         })
 
         const result = await list({
@@ -108,8 +110,8 @@ describe('list', () => {
         expect(result.data).toHaveLength(2)
         expect(result.data).toEqual(
             expect.arrayContaining([
-                expect.objectContaining({ name: 'Item 1', encrypted: true }),
-                expect.objectContaining({ name: 'Item 2', encrypted: false }),
+                expect.objectContaining({ name: 'Item 1', lock: true }),
+                expect.objectContaining({ name: 'Item 2', lock: false }),
             ])
         )
     })

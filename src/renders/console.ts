@@ -106,7 +106,7 @@ function list(output: any, columns?: any[]) {
     console.log(table.toString())
 }
 
-export default defineRender({
+export const consoleRender = defineRender({
     name: 'console',
     render: async ({ method, output, options }) => {
         if (options.format === 'json') {

@@ -1,11 +1,12 @@
 import crypto from 'crypto'
 import { describe, expect, it, beforeEach } from 'vitest'
 import { createFilesystemFake } from '@/core/filesystem/createFilesystemFake.js'
-import { unlock } from './unlock.js'
+import { unlockItem } from './unlockItem.js'
 import { createEncryption } from './encryption.js'
 import { lock } from './lock.js'
+import { lockItem } from './lockItem.js'
 
-describe('unlock', () => {
+describe('unlockItem', () => {
     const filesystem = createFilesystemFake()
     const resolve = filesystem.path.resolve
     const root = resolve('vault')
@@ -39,16 +40,16 @@ describe('unlock', () => {
             JSON.stringify({ id: 'item1', name: 'Item 1' })
         )
 
-        await lock({
-            id: 'item1',
+        await lockItem({
             root,
             filesystem,
+            options: { id: 'item1' },
         })
 
-        const result = await unlock({
-            id: 'item1',
+        const result = await unlockItem({
             root,
             filesystem,
+            options: { id: 'item1' },
         })
 
         expect(result).toEqual(
@@ -64,10 +65,10 @@ describe('unlock', () => {
 
     it('should throw an error if metadata file is not found', async () => {
         await expect(
-            unlock({
-                id: 'nonexistent',
+            unlockItem({
                 root,
                 filesystem,
+                options: { id: 'nonexistent' },
             })
         ).rejects.toThrow('Item nonexistent not found in /vault/nonexistent')
     })
@@ -79,16 +80,16 @@ describe('unlock', () => {
             { recursive: true }
         )
 
-        await lock({
-            id: 'item1',
+        await lockItem({
             root,
             filesystem,
+            options: { id: 'item1' },
         })
 
-        const result = await unlock({
-            id: 'item1',
+        const result = await unlockItem({
             root,
             filesystem,
+            options: { id: 'item1' },
         })
 
         expect(result).toEqual(
