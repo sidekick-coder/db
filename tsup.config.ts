@@ -6,7 +6,7 @@ export default defineConfig({
     format: ['cjs', 'esm'],
     tsconfig: path.resolve(__dirname, 'tsconfig.json'),
     splitting: false,
-    minify: true,
+    //minify: true,
     clean: true,
     treeshake: true,
 })

@@ -12,7 +12,7 @@ export const provider = defineProvider((config, { root }) => {
     const schema = v.object({
         path: v.extras.path(root),
         format: v.optional(v.picklist(['markdown', 'json', 'yaml']), 'markdown'),
-        id_strategy: v.optional(v.string(), 'incremental'),
+        id_strategy: v.optional(v.string(), 'increment'),
     })
 
     const { path, format, id_strategy } = validate(schema, config)
@@ -38,9 +38,9 @@ export const provider = defineProvider((config, { root }) => {
 
         let files = await drive.list(path, { onlyDirs: true })
 
-        if (config.exclude) {
-            files = files.filter((file) => !config.exclude?.includes(file))
-        }
+        const excludeDirs = ['.db']
+
+        files = files.filter((file) => !excludeDirs.includes(file))
 
         const result = [] as any[]
 

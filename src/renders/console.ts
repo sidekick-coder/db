@@ -1,8 +1,12 @@
 import { defineRender } from '@/core/render/defineRender.js'
+import { createRequire } from 'module'
 import Table from 'cli-table3'
-import chalk from 'chalk'
+
+const require = createRequire(import.meta.url)
 
 function formatValue(value: any) {
+    const chalk = require('chalk')
+
     if (typeof value === 'boolean') {
         return value ? chalk.green('true') : chalk.red('false')
     }
@@ -31,17 +35,18 @@ function general(output: any = {}) {
 }
 
 function list(output: any, columns?: any[]) {
+    const chalk = require('chalk')
     const screenWidth = (process.stdout.columns || 80) - 6
     const rows = [] as string[][]
-    const head: any = []
+    const head: { label: string; value: string; width?: number; realWidth?: number }[] = []
+    const data = output.data as Record<string, any>[]
 
     if (columns) {
         head.push(...columns)
     }
 
     if (!columns) {
-        output.data
-            .map((item: any) => Object.keys(item))
+        data.map((item: any) => Object.keys(item))
             .flat()
             .filter((value, index, self) => self.indexOf(value) === index)
             .forEach((key) => {
@@ -109,13 +114,13 @@ function list(output: any, columns?: any[]) {
 export const consoleRender = defineRender({
     name: 'console',
     render: async ({ method, output, options }) => {
-        if (options.format === 'json') {
+        if (options?.format === 'json') {
             console.log(JSON.stringify(output))
             return
         }
 
         if (method === 'list') {
-            return list(output, options.columns)
+            return list(output, options?.columns)
         }
 
         if (Array.isArray(output)) {
