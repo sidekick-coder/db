@@ -13,7 +13,9 @@ import { create as vaultCreate } from './create.js'
 import { update as vaultUpdate } from './update.js'
 import { destroy as vaultDestroy } from './destroy.js'
 import { lock as vaultLock } from './lock.js'
+import { lockItem as vaultLockItem } from './lockItem.js'
 import { unlock as vaultUnlock } from './unlock.js'
+import { unlockItem as vaultUnlockItem } from './unlockItem.js'
 import { init as vaultInit } from './init.js'
 import { auth as vaultAuth } from './auth.js'
 
@@ -54,23 +56,37 @@ export const provider = defineProvider((payload, { root, fs }) => {
         })
     }
 
-    async function lock(payload: any) {
-        const id = validate((v) => v.string('id is required'), payload.id)
-
+    function lock(payload: any) {
         return vaultLock({
-            id,
             root: config.path,
             filesystem,
+            parser,
+            options: payload,
+        })
+    }
+
+    function lockItem(payload: any) {
+        return vaultLockItem({
+            root: config.path,
+            filesystem,
+            options: payload,
         })
     }
 
     function unlock(payload: any) {
-        const id = validate((v) => v.string('id is required'), payload.id)
-
         return vaultUnlock({
-            id,
+            parser,
             root: config.path,
             filesystem,
+            options: payload,
+        })
+    }
+
+    function unlockItem(payload: any) {
+        return vaultUnlockItem({
+            root: config.path,
+            filesystem,
+            options: payload,
         })
     }
 
@@ -122,7 +138,9 @@ export const provider = defineProvider((payload, { root, fs }) => {
 
     return {
         lock,
+        lockItem,
         unlock,
+        unlockItem,
         list,
         find,
         create,

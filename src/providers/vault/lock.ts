@@ -1,55 +1,69 @@
-import { Config } from './config.js'
 import { Filesystem } from '@/core/filesystem/createFilesystem.js'
-import { createEncryption, Encryption } from './encryption.js'
-import { findMetadata } from './findMetadata.js'
-import { findPassword } from './findPassword.js'
+import { validate } from '@/core/validator/validate.js'
+import { schema as where } from '@/core/database/where.js'
+import { WhereCondition } from '@/core/provider/index.js'
+import { list } from './list.js'
+import { Parser } from '@/core/parsers/all.js'
+import { lockItem } from './lockItem.js'
+import { tryCatch } from '@/utils/tryCatch.js'
 
 interface Options {
-    id: string
     root: string
     filesystem: Filesystem
+    parser: Parser
+    options: {
+        where?: WhereCondition
+        limit?: number
+        verbose?: boolean
+    }
 }
 
-export async function lock(options: Options) {
-    const { filesystem, root, id } = options
-    const resolve = (...args: string[]) => filesystem.path.resolve(root, ...args)
+export async function lock(payload: Options) {
+    const { filesystem, root, parser } = payload
 
-    const filepath = resolve(options.id)
+    const options = validate(
+        (v) =>
+            v.object({
+                where: v.optional(where),
+                limit: v.optional(v.number()),
+                verbose: v.optional(v.boolean()),
+            }),
+        payload.options
+    )
 
-    if (!filesystem.existsSync(resolve(options.id))) {
-        throw new Error(`Item ${options.id} not found in ${filepath}`)
-    }
-
-    const password = findPassword({ filesystem, root })
-    const metadata = findMetadata({ id: id, filesystem, root })
-
-    const encryption = createEncryption({
-        password,
-        salt: metadata.salt,
-        iv: metadata.iv,
+    const { data: items } = await list({
+        root,
+        filesystem,
+        parser,
+        options: {
+            where: options.where,
+            limit: options.limit,
+        },
     })
 
-    for (const file of metadata.files) {
-        if (file.encrypted) {
-            continue
+    let success = 0
+    let failed = 0
+
+    for (const item of items) {
+        const [result, error] = await tryCatch(() =>
+            lockItem({ filesystem, root, options: { id: item.id } })
+        )
+
+        if (result) {
+            success++
         }
 
-        const source_filename = file.name
-        const target_filename = encryption.encrypt(source_filename)
+        if (error) {
+            failed++
+        }
 
-        const contents = filesystem.readSync(resolve(options.id, source_filename))
-        const encrypted = encryption.encrypt(contents)
-
-        filesystem.writeSync(resolve(options.id, target_filename), encrypted)
-        filesystem.removeSync(resolve(options.id, source_filename))
-
-        file.encrypted = true
-        file.name = target_filename
+        if (options.verbose) {
+            console.log(`Item ${item.id} locked`)
+        }
     }
 
-    filesystem.writeSync.json(resolve(options.id, '.db', 'metadata.json'), metadata, {
-        recursive: true,
-    })
-
-    return metadata.files
+    return {
+        success,
+        failed,
+    }
 }

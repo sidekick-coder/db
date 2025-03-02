@@ -89,7 +89,11 @@ function list(output: any, columns?: any[]) {
     })
 
     const table = new Table({
-        head: head.map((h) => h.label),
+        head: head.map((h) => chalk.bold(h.label)),
+        style: {
+            head: [], //disable colors in header cells
+            border: [], //disable colors for the border
+        },
         wordWrap: true,
         wrapOnWordBoundary: false,
         colWidths: head.map((h) => h.realWidth),
