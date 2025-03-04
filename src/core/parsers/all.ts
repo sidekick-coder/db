@@ -10,6 +10,13 @@ export interface Parser {
 
 export const parsers = [] as Parser[]
 
+export const json: Parser = {
+    name: 'json',
+    ext: 'json',
+    parse: JSON.parse,
+    stringify: (contents) => JSON.stringify(contents, null, 4),
+}
+
 parsers.push({
     name: 'json',
     ext: 'json',

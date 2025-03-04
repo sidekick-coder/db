@@ -10,6 +10,8 @@ interface Options {
     root: string
 }
 
+export interface Database extends ReturnType<typeof createDatabase> {}
+
 export function createDatabase(definition: DatabaseDefinition, options: Options) {
     const instance = createProvider({
         name: definition.provider.name,
