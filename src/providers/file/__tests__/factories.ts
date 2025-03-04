@@ -1,4 +1,5 @@
 import { Filesystem } from '@/core/filesystem/createFilesystem.js'
+import { Parser } from '@/core/parsers/all.js'
 
 interface Options {
     filesystem: Filesystem

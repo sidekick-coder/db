@@ -325,3 +325,72 @@ db list --view "done-tasks"
 # load by file
 db list --view "done-tasks.yml"
 ```
+
+## Programatic usage
+
+You can use the library in your own javascripts projects too!
+
+### Install
+
+```bash 
+npm install @sidekick-coder/db
+```
+
+***createDatabase***
+```js
+import { createDatabase } from '@sidekick-coder/db/database'
+
+const definition = {
+    name: 'tasks',
+    provider: {
+        name: 'file',
+        config: {
+            path: 'data', // absolute path 
+            format: 'markdown', 
+            id_strategy: 'increment' 
+        }
+    },
+}
+
+const options = {
+    root: 'C:\\Users' // optional, root path to resolve relative paths
+}
+
+const db = createDatabase(definition, options)
+
+const items = await db.list()
+
+console.log(items)
+
+// also access provider custom methods 
+const files = await db.provider.findMetadata()
+
+console.log(files)
+```
+
+***createDatabaseFromConfig***
+
+```js 
+import { resolve } from '@sidekick-coder/db/config'
+import { createDatabaseFromConfig } from '@sidekick-coder/db/database'
+
+const config = resolve('path/to/db.config.yml') // must be absolute
+
+const db = createDatabaseFromConfig(config, 'database-name')
+
+const items = await db.list() 
+
+console.log(items)
+````
+***createDatabaseFromPath***
+
+```js
+import { createDatabaseFromPath } from '@sidekick-coder/db/database'
+
+const db = createDatabaseFromPath('path/to/data/db.config.yml', 'database-name')
+
+const items = await db.list()
+
+console.log(items)
+```
+
