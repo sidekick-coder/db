@@ -1,40 +1,17 @@
 import { beforeEach, expect, it } from 'vitest'
-import { createFilesystemFake } from '@/core/filesystem/createFilesystemFake.js'
 import { list } from './list.js'
 import { json as parser } from '@/core/parsers/all.js'
+import { createFactories } from './__tests__/factories.js'
+import { createFilesystemFake } from '@/core/filesystem/createFilesystemFake.js'
 
 const filesystem = createFilesystemFake()
+const { makeItem, makeManyItems } = createFactories({ filesystem, parser })
 
 beforeEach(() => {
     filesystem.removeSync('/db')
 
     filesystem.mkdirSync('/db')
 })
-
-function makeItem(payload = {}) {
-    const id = String(filesystem.readdirSync('/db').length)
-    const filename = `/db/${id}.json`
-    const raw = parser.stringify(payload)
-
-    filesystem.writeSync.text(filename, raw)
-
-    return {
-        id,
-        filename,
-        raw,
-        ...payload,
-    }
-}
-
-function makeManyItems(count = 5, payload?: any) {
-    const items = []
-
-    for (let i = 0; i < count; i++) {
-        items.push(makeItem(payload))
-    }
-
-    return items
-}
 
 it('should list items', async () => {
     const items = makeManyItems()
