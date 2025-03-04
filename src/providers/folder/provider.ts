@@ -13,16 +13,17 @@ import { create } from './create.js'
 import { find } from './find.js'
 import { destroy } from './destroy.js'
 
-export const provider = defineProvider((config, { root }) => {
+export const provider = defineProvider((config, instanceConfig) => {
     const filesystem = createFilesystem()
 
     const schema = v.object({
-        path: v.extras.path(root),
+        path: v.extras.path(instanceConfig.root, filesystem.path),
         format: v.optional(v.picklist(['markdown', 'json', 'yaml']), 'markdown'),
         id_strategy: v.optional(v.string(), 'increment'),
     })
 
     const { path, format, id_strategy } = validate(schema, config)
+    const root = path
 
     const parser = parsers.find((p) => p.name === format)
 
@@ -37,21 +38,21 @@ export const provider = defineProvider((config, { root }) => {
     return {
         list: (options) =>
             list({
-                root: config.path,
+                root,
                 filesystem,
                 parser,
                 options,
             }),
         find: (options) =>
             find({
-                root: config.path,
+                root,
                 filesystem,
                 parser,
                 options,
             }),
         create: (options) =>
             create({
-                root: config.path,
+                root,
                 filesystem,
                 parser,
                 makeId: () => makeId(id_strategy),
@@ -59,7 +60,7 @@ export const provider = defineProvider((config, { root }) => {
             }),
         update: (options) =>
             update({
-                root: config.path,
+                root,
                 filesystem,
                 options,
                 parser,
@@ -67,7 +68,7 @@ export const provider = defineProvider((config, { root }) => {
         destroy: (options) =>
             destroy({
                 filesystem,
-                root: config.path,
+                root,
                 parser,
                 options,
             }),
