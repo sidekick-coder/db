@@ -12,6 +12,7 @@ import { parsers } from '@/core/parsers/index.js'
 import { update } from './update.js'
 import { list } from './list.js'
 import { createFilesystem } from '@/core/filesystem/createFilesystem.js'
+import { create } from './create.js'
 
 export const provider = defineProvider((config, { root }) => {
     const filesystem = createFilesystem()
@@ -84,7 +85,14 @@ export const provider = defineProvider((config, { root }) => {
                 options,
             }),
         //find,
-        //create,
+        create: (options) =>
+            create({
+                root: config.path,
+                filesystem,
+                parser,
+                makeId,
+                options,
+            }),
         update: (options) =>
             update({
                 root: config.path,
