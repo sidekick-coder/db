@@ -28,6 +28,19 @@ export function parseCondition(condition: WhereCondition) {
         }
     }
 
+    if (condition.value === '$exists') {
+        return {
+            or: [],
+            and: [
+                {
+                    field: condition.field,
+                    operator: 'exists',
+                    value: true,
+                },
+            ],
+        }
+    }
+
     return {
         and: [condition],
         or: [],
