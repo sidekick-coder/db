@@ -2,13 +2,15 @@ import { vWithExtras as v, validate } from '@/core/validator/index.js'
 import { InferOutput } from 'valibot'
 import { DataProvider } from '../provider/index.js'
 
+import { schema as data } from './data.js'
+
 export interface CreateOptions extends InferOutput<typeof schema> {}
 
 const schema = v.objectWithRest(
     {
-        data: v.record(v.string(), v.any()),
+        data: data(),
     },
-    v.any()
+    v.record(v.string(), v.any())
 )
 
 export async function create(provider: DataProvider, payload: CreateOptions) {
