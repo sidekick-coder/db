@@ -4,17 +4,17 @@ import { YAML } from '../parsers/yaml.js'
 import { v } from '../validator/index.js'
 import fg from 'fast-glob'
 
-export interface SourceItemFile {
+export interface SourceItemFile<T = any> {
     filename: string
     dirname: string
-    data: any
+    data: T
 }
 
-export interface SourceItemData {
-    data: any
+export interface SourceItemData<T = any> {
+    data: T
 }
 
-export type SourceItem = SourceItemFile | SourceItemData
+export type SourceItem<T = any> = SourceItemFile<T> | SourceItemData<T>
 
 export const definition = (root: string) =>
     v.object({

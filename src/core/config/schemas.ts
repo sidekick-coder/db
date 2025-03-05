@@ -29,14 +29,17 @@ export const view = (root: string) =>
     })
 
 export const database = (root: string) =>
-    v.object({
-        name: v.string(),
-        provider: v.object({
+    v.objectWithRest(
+        {
             name: v.string(),
-            config: v.any(),
-        }),
-        view: v.optional(view(root)),
-    })
+            provider: v.object({
+                name: v.string(),
+                config: v.any(),
+            }),
+            view: v.optional(view(root)),
+        },
+        v.record(v.string(), v.any())
+    )
 
 export const config = (root: string) =>
     v.object({
@@ -45,7 +48,7 @@ export const config = (root: string) =>
             sources: v.pipe(
                 sources(root),
                 v.transform((i) => {
-                    return i.map((i: any) => {
+                    return i.map((i) => {
                         if ('dirname' in i) {
                             return {
                                 filename: i.filename,

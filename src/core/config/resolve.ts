@@ -1,11 +1,19 @@
 import { drive } from '@/core/drive/index.js'
 import { YAML } from '@/core/parsers/index.js'
 import { v, validate } from '../validator/index.js'
-import { database, config } from './schemas.js'
+import { database, config, DatabaseDefinition } from './schemas.js'
 import { dirname } from 'path'
-import { SourceItemFile } from '../common/sources.js'
+import { SourceItem, SourceItemFile } from '../common/sources.js'
 
-export type Config = ReturnType<typeof resolve>
+export interface Config {
+    dirname: string
+    filename: string
+    databases: {
+        default: string
+        sources: SourceItem<DatabaseDefinition>[]
+    }
+    [key: string]: any
+}
 
 export function resolve(filename: string) {
     const root = dirname(filename)
@@ -42,5 +50,5 @@ export function resolve(filename: string) {
         dirname: root,
         filename,
         ...result,
-    }
+    } as Config
 }
