@@ -98,7 +98,7 @@ export function query(data: any[], options?: Options) {
         items = items.map((item) => pick(item, options.include))
     }
 
-    if (exclude?.length && !options.include.length) {
+    if (exclude?.length && !include?.length) {
         items = items.map((item) => omit(item, exclude))
     }
 
