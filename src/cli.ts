@@ -9,6 +9,7 @@ import { camelCase, merge, omit, snakeCase } from 'lodash-es'
 import { createRenderer } from './core/render/createRenderer.js'
 import { consoleRender } from './renders/index.js'
 import { createDatabase } from './core/database/index.js'
+import { parseOptions } from './utils/parseOptions.js'
 
 async function run() {
     const { _: allArgs, ...flags } = minimist(process.argv.slice(2), {
@@ -56,20 +57,7 @@ async function run() {
         root: folder,
     })
 
-    const options: any = validate(
-        (v) =>
-            v.objectWithRest(
-                {
-                    view: v.optional(v.string(), databaseDefinition.view?.default),
-                    render: v.optional(v.string()),
-                    data: v.optional(v.extras.vars),
-                    where: v.optional(v.extras.vars),
-                    render_options: v.optional(v.extras.vars, {}),
-                },
-                v.any()
-            ),
-        flags
-    )
+    const options: any = parseOptions(process.argv.slice(2))
 
     // view
     if (options.view) {

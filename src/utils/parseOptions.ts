@@ -30,12 +30,16 @@ export function parseOptions(args: string[], options?: Options) {
                     render: v.optional(v.string()),
                     data: v.optional(v.extras.vars),
                     where: v.optional(v.extras.vars),
+                    include: v.optional(v.extras.stringList),
+                    exclude: v.optional(v.extras.stringList),
                     render_options: v.optional(v.extras.vars, {}),
                 },
                 v.any()
             ),
         flags
     )
+
+    console.log('result', result)
 
     // view
     if (result.view && options?.databaseDefinition) {
