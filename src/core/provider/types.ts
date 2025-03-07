@@ -1,9 +1,9 @@
-import { CreateOptions } from '../database/create.js'
-import { DestroyOptions } from '../database/destroy.js'
-import { FindOptions } from '../database/find.js'
-import { UpdateOptions } from '../database/update.js'
+import type { CreateOptions } from '../database/create.js'
+import type { DestroyOptions } from '../database/destroy.js'
+import type { FindOptions } from '../database/find.js'
+import type { UpdateOptions } from '../database/update.js'
 import type { ListOptions } from '@/core/database/list.js'
-import { FilesystemOptionsFs } from '../filesystem/types.js'
+import type { FilesystemOptions } from '../filesystem/types.js'
 
 export interface WhereCondition {
     field: string
@@ -42,8 +42,8 @@ export interface ListResponse {
 }
 
 export interface DataProvider {
-    list: (options: ListOptions) => Promise<ListResponse>
-    find: (options: FindOptions) => Promise<DataItem | null>
+    list: (options?: ListOptions) => Promise<ListResponse>
+    find: (options?: FindOptions) => Promise<DataItem | null>
     create: (options: CreateOptions) => Promise<DataItem>
     update: (options: UpdateOptions) => Promise<{ count: number }>
     destroy: (options: DestroyOptions) => Promise<{ count: number }>
@@ -51,7 +51,8 @@ export interface DataProvider {
 
 export interface DataProviderInstanceOptions {
     root: string
-    fs?: FilesystemOptionsFs
+    fs?: FilesystemOptions['fs']
+    path?: FilesystemOptions['path']
 }
 
 export interface MountDataProvider {

@@ -5,7 +5,7 @@ interface Config {
     pattern?: string
 }
 
-export function createDateStrategy(): Strategy {
+export function createDate(): Strategy {
     return {
         name: 'date',
         async create(config: Config) {

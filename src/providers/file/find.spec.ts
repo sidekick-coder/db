@@ -4,13 +4,14 @@ import { createFactories } from './__tests__/factories.js'
 import { createFilesystemFake } from '@/core/filesystem/createFilesystemFake.js'
 import { find } from './find.js'
 
+const root = '/db'
 const filesystem = createFilesystemFake()
-const { makeItem, makeManyItems } = createFactories({ filesystem, parser })
+const { makeItem, makeManyItems } = createFactories({ filesystem, parser, root })
 
 beforeEach(() => {
-    filesystem.removeSync('/db')
+    filesystem.removeSync(root)
 
-    filesystem.mkdirSync('/db')
+    filesystem.mkdirSync(root)
 })
 
 it('should find single item', async () => {

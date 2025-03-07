@@ -1,16 +1,21 @@
 import { Filesystem } from '@/core/filesystem/createFilesystem.js'
+import { pad } from '@/core/idStrategy/createIncremental.js'
 import { Parser } from '@/core/parsers/all.js'
 
 interface Options {
     filesystem: Filesystem
     parser: Parser
+    root: string
 }
 
 export function createFactories(options: Options) {
-    const { filesystem, parser } = options
+    const { filesystem, parser, root } = options
+    const resolve = filesystem.path.resolve
+
     function makeItem(payload = {}) {
-        const id = String(filesystem.readdirSync('/db').length)
-        const filename = `/db/${id}.json`
+        const id = pad(filesystem.readdirSync(root).length, 2)
+
+        const filename = resolve(root, `${id}.${parser.ext}`)
         const raw = parser.stringify(payload)
 
         filesystem.writeSync.text(filename, raw)
@@ -19,7 +24,7 @@ export function createFactories(options: Options) {
             id,
             filename,
             raw,
-            ...payload,
+            ...parser.parse(raw),
         }
     }
 

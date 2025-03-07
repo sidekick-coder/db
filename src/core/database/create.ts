@@ -10,7 +10,7 @@ const schema = v.objectWithRest(
     {
         data: data(),
     },
-    v.record(v.string(), v.any())
+    v.any()
 )
 
 export async function create(provider: DataProvider, payload: CreateOptions) {

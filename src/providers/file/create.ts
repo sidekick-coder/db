@@ -25,8 +25,6 @@ export async function create(payload: Payload) {
 
     const raw = parser.stringify(data)
 
-    filesystem.mkdirSync(resolve(id))
-
     filesystem.writeSync.text(filename, raw)
 
     const item = {

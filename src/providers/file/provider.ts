@@ -1,9 +1,5 @@
-import { resolve } from 'path'
-import { drive } from '@/core/drive/index.js'
 import { defineProvider } from '@/core/provider/defineProvider.js'
 
-import { createIncrementalStategyFromFile } from '@/core/id/incremental.js'
-import { createIdMaker } from '@/core/id/index.js'
 import { v, validate } from '@/core/validator/index.js'
 import { parsers } from '@/core/parsers/index.js'
 
@@ -13,31 +9,47 @@ import { createFilesystem } from '@/core/filesystem/createFilesystem.js'
 import { create } from './create.js'
 import { find } from './find.js'
 import { destroy } from './destroy.js'
+import { createStrategies } from '@/core/idStrategy/createStrategies.js'
 
 export const provider = defineProvider((config, instanceOptions) => {
-    const filesystem = createFilesystem()
+    const filesystem = createFilesystem({
+        fs: instanceOptions.fs,
+        path: instanceOptions.path,
+    })
 
     const schema = v.object({
         path: v.extras.path(instanceOptions.root, filesystem.path),
         format: v.optional(v.picklist(['markdown', 'json', 'yaml']), 'markdown'),
-        id_strategy: v.optional(v.string(), 'increment'),
+        id_strategy: v.optional(
+            v.object({
+                name: v.string(),
+                options: v.optional(v.any()),
+            }),
+            { name: 'incremental' }
+        ),
     })
 
     const { path, format, id_strategy } = validate(schema, config)
+
     const root = path
 
+    const strategies = createStrategies({ filesystem, root })
+
     const parser = parsers.find((p) => p.name === format)
+    const strategy = strategies.find((s) => s.name === id_strategy.name)
 
     if (!parser) {
         throw new Error(`Parser for format "${format}" not found`)
     }
 
-    const makeId = createIdMaker({
-        strategies: [createIncrementalStategyFromFile(drive, resolve(path, '.db', 'last_id.json'))],
-    })
+    if (!strategy) {
+        throw new Error(`Strategy for id "${id_strategy}" not found`)
+    }
+
+    const makeId = () => strategy.create(id_strategy.options)
 
     return {
-        list: (options) =>
+        list: (options = {}) =>
             list({
                 root,
                 filesystem,
@@ -56,7 +68,7 @@ export const provider = defineProvider((config, instanceOptions) => {
                 root,
                 filesystem,
                 parser,
-                makeId: () => makeId(id_strategy),
+                makeId,
                 options,
             }),
         update: (options) =>

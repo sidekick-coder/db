@@ -14,5 +14,11 @@ export function createDatabaseFromPath(path: string, databaseName?: string) {
 
     const defintion = source.data
 
-    return createDatabase(defintion, { root: source.dirname || config.dirname })
+    let root = config.dirname
+
+    if ('dirname' in source) {
+        root = source.dirname
+    }
+
+    return createDatabase(defintion, { root })
 }

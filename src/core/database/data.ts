@@ -4,7 +4,7 @@ export const schema = () =>
     v.pipe(
         v.record(v.string(), v.any()),
         v.transform((value) => {
-            const result = {}
+            const result: Record<string, any> = {}
 
             Object.entries(value).forEach(([k, v]) => {
                 if (v === '$undefined') {
@@ -13,8 +13,6 @@ export const schema = () =>
 
                 result[k] = v
             })
-
-            console.log('result', result)
 
             return result
         })

@@ -17,19 +17,14 @@ export const json: Parser = {
     stringify: (contents) => JSON.stringify(contents, null, 4),
 }
 
-parsers.push({
-    name: 'json',
-    ext: 'json',
-    parse: JSON.parse,
-    stringify: (contents) => JSON.stringify(contents, null, 4),
-})
-
-parsers.push({
+export const markdown: Parser = {
     name: 'markdown',
     ext: 'md',
     parse: MD.parse,
     stringify: (contents) => MD.stringify(contents),
-})
+}
+
+parsers.push(json, markdown)
 
 parsers.push({
     name: 'yaml',

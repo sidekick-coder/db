@@ -23,7 +23,7 @@ export type ReadOutput<T extends ReadRecordOptions> =
     Record<string, any> | null
 /*  eslint-enable prettier/prettier */
 
-export function createFilesystem(options: FilesystemOptions = {}) {
+export function createFilesystem<T extends FilesystemOptions | undefined>(options: T = {} as any) {
     const fs = options.fs || createFsNode()
     const path = options.path || createPathNode()
 

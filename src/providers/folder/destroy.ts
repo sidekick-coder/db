@@ -24,7 +24,7 @@ export async function destroy(payload: Payload) {
     })
 
     for (const item of items) {
-        filesystem.removeSync(item.filename)
+        filesystem.removeSync(item.folder)
     }
 
     return { count: items.length }

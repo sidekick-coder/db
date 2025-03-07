@@ -17,7 +17,7 @@ export async function create(payload: Payload) {
     const data = options.data
 
     const id = data.id || (await makeId())
-    const folder = resolve(id, `index.${parser.ext}`)
+    const folder = resolve(id)
     const filename = resolve(id, `index.${parser.ext}`)
 
     if (filesystem.existsSync(folder)) {
