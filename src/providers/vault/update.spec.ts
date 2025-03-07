@@ -7,7 +7,6 @@ import { createEncryption } from './encryption.js'
 import { validate } from '@/core/validator/validate.js'
 import { schema as configSchema } from './config.js'
 import { parsers } from '@/core/parsers/all.js'
-import { lock } from './lock.js'
 import { find } from './find.js'
 import { lockItem } from './lockItem.js'
 
@@ -19,7 +18,6 @@ describe('update', () => {
     const config = validate(configSchema('/', filesystem.path), {
         format: 'json',
         path: root,
-        id_strategy: 'increment',
         password: crypto.randomBytes(16).toString('hex'),
     })
 

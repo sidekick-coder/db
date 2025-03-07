@@ -8,5 +8,11 @@ export const schema = (dirname: string, path = createPathNode()) =>
     v.object({
         format: v.optional(v.string(), 'markdown'),
         path: v.extras.path(dirname, path),
-        id_strategy: v.optional(v.string(), 'increment'),
+        id_strategy: v.optional(
+            v.object({
+                name: v.string(),
+                options: v.optional(v.any()),
+            }),
+            { name: 'incremental' }
+        ),
     })

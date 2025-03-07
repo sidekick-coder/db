@@ -23,12 +23,13 @@ export async function create(payload: Payload) {
         throw new Error(`Item with id "${id}" already exists`)
     }
 
-    const folder = resolve(id, `index.${parser.ext}`)
+    const folder = resolve(id)
+    const filename = resolve(id, `index.${parser.ext}`)
     const raw = parser.stringify(data)
 
     filesystem.mkdirSync(resolve(id))
 
-    filesystem.writeSync.text(folder, raw)
+    filesystem.writeSync.text(filename, raw)
 
     await lockItem({
         filesystem,

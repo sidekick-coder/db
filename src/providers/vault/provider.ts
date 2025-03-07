@@ -1,11 +1,8 @@
 import { defineProvider } from '@/core/provider/defineProvider.js'
 import { validate } from '@/core/validator/index.js'
 import { DataProvider } from '@/core/provider/index.js'
-import { drive } from '@/core/drive/index.js'
 import { createFilesystem } from '@/core/filesystem/createFilesystem.js'
 import { parsers } from '@/core/parsers/all.js'
-import { createIdMaker } from '@/core/id/index.js'
-import { createIncrementalStategyFromFile } from '@/core/id/incremental.js'
 import { schema as configSchema } from './config.js'
 import { list as vaultList } from './list.js'
 import { find as vaultFind } from './find.js'
@@ -18,25 +15,28 @@ import { unlock as vaultUnlock } from './unlock.js'
 import { unlockItem as vaultUnlockItem } from './unlockItem.js'
 import { init as vaultInit } from './init.js'
 import { auth as vaultAuth } from './auth.js'
+import { createStrategies } from '@/core/idStrategy/createStrategies.js'
 
-export const provider = defineProvider((payload, { root, fs }) => {
-    const config = validate(configSchema(root), payload)
-    const filesystem = createFilesystem({ fs })
-    const resolve = (...args: string[]) => filesystem.path.resolve(config.path, ...args)
+export const provider = defineProvider((payload, { root, fs, path }) => {
+    const config = validate(configSchema(root, path), payload)
+    const filesystem = createFilesystem({ fs, path })
 
-    // parser
-    const parser = parsers.find((p) => p.name === config.format)
+    const { format, id_strategy } = config
+
+    const strategies = createStrategies({ filesystem, root: config.path })
+
+    const parser = parsers.find((p) => p.name === format)
+    const strategy = strategies.find((s) => s.name === id_strategy.name)
 
     if (!parser) {
-        throw new Error(`Parser for format "${config.format}" not found`)
+        throw new Error(`Parser for format "${format}" not found`)
     }
 
-    // id maker
-    const maker = createIdMaker({
-        strategies: [createIncrementalStategyFromFile(drive, resolve('.db', 'last_id.json'))],
-    })
+    if (!strategy) {
+        throw new Error(`Strategy for id "${id_strategy}" not found`)
+    }
 
-    const makeId = () => maker(config.id_strategy)
+    const makeId = () => strategy.create(id_strategy.options)
 
     // methods
 

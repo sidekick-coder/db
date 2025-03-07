@@ -8,7 +8,7 @@ const filesystem = createFilesystemFake()
 const resolve = filesystem.path.resolve
 const root = '/db'
 
-const { readSync, writeSync } = filesystem
+const { readSync } = filesystem
 const { makeItem, makeManyItems } = createFactories({ filesystem, parser, root })
 
 beforeEach(() => {

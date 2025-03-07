@@ -16,7 +16,6 @@ describe('list', () => {
     const config = validate(configSchema('/', filesystem.path), {
         format: 'json',
         path: root,
-        id_strategy: 'increment',
     })
 
     const encryption = createEncryption()

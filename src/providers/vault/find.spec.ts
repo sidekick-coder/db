@@ -15,7 +15,6 @@ describe('find', () => {
     const config = validate(configSchema('/', filesystem.path), {
         format: 'json',
         path: root,
-        id_strategy: 'increment',
     })
     const encryption = createEncryption()
     const parser = parsers.find((p) => p.name === config.format)
