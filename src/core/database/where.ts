@@ -41,6 +41,21 @@ export function parseCondition(condition: WhereCondition) {
         }
     }
 
+    if (condition.value.startsWith('$in')) {
+        const values = condition.value.slice(4, -1).split(',')
+
+        return {
+            or: [],
+            and: [
+                {
+                    field: condition.field,
+                    operator: 'in',
+                    value: values,
+                },
+            ],
+        }
+    }
+
     return {
         and: [condition],
         or: [],
