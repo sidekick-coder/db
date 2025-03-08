@@ -41,7 +41,7 @@ export function parseCondition(condition: WhereCondition) {
         }
     }
 
-    if (condition.value.startsWith('$in')) {
+    if (typeof condition.value == 'string' && condition.value.startsWith('$in')) {
         const values = condition.value.slice(4, -1).split(',')
 
         return {

@@ -19,11 +19,11 @@ export function createDatabase(definition: DatabaseDefinition, options: Options)
         root: options.root,
     })
 
-    function list(payload: ListOptions) {
+    function list(payload: ListOptions = {}) {
         return baseList(instance, payload)
     }
 
-    function find(payload: FindOptions) {
+    function find(payload: FindOptions = {}) {
         return baseFind(instance, payload)
     }
 
