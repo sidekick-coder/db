@@ -1,20 +1,20 @@
 import { defineProvider } from '@/core/provider/defineProvider.js'
 import { validate } from '@/core/validator/index.js'
-import { DataProvider } from '@/core/provider/index.js'
 import { createFilesystem } from '@/core/filesystem/createFilesystem.js'
 import { parsers } from '@/core/parsers/all.js'
 import { schema as configSchema } from './config.js'
-import { list as vaultList } from './list.js'
-import { find as vaultFind } from './find.js'
-import { create as vaultCreate } from './create.js'
-import { update as vaultUpdate } from './update.js'
-import { destroy as vaultDestroy } from './destroy.js'
-import { lock as vaultLock } from './lock.js'
-import { lockItem as vaultLockItem } from './lockItem.js'
-import { unlock as vaultUnlock } from './unlock.js'
-import { unlockItem as vaultUnlockItem } from './unlockItem.js'
-import { init as vaultInit } from './init.js'
-import { auth as vaultAuth } from './auth.js'
+import { list } from './list.js'
+import { find } from './find.js'
+import { create } from './create.js'
+import { update } from './update.js'
+import { destroy } from './destroy.js'
+import { lock } from './lock.js'
+import { lockItem } from './lockItem.js'
+import { unlock } from './unlock.js'
+import { unlockItem } from './unlockItem.js'
+import { init } from './init.js'
+import { auth } from './auth.js'
+
 import { createStrategies } from '@/core/idStrategy/createStrategies.js'
 
 export const provider = defineProvider((payload, { root, fs, path }) => {
@@ -38,115 +38,22 @@ export const provider = defineProvider((payload, { root, fs, path }) => {
 
     const makeId = () => strategy.create(id_strategy.options)
 
-    // methods
-
-    async function init(payload: any) {
-        return vaultInit({
-            filesystem,
-            root: config.path,
-            options: payload,
-        })
-    }
-
-    async function auth(payload: any) {
-        return vaultAuth({
-            filesystem,
-            root: config.path,
-            options: payload,
-        })
-    }
-
-    function lock(payload: any) {
-        return vaultLock({
-            root: config.path,
-            filesystem,
-            parser,
-            options: payload,
-        })
-    }
-
-    function lockItem(payload: any) {
-        return vaultLockItem({
-            root: config.path,
-            filesystem,
-            options: payload,
-        })
-    }
-
-    function unlock(payload: any) {
-        return vaultUnlock({
-            parser,
-            root: config.path,
-            filesystem,
-            options: payload,
-        })
-    }
-
-    function unlockItem(payload: any) {
-        return vaultUnlockItem({
-            root: config.path,
-            filesystem,
-            options: payload,
-        })
-    }
-
-    const list: DataProvider['list'] = async (options) => {
-        return vaultList({
-            filesystem,
-            root: config.path,
-            parser,
-            options: options,
-        })
-    }
-
-    const find: DataProvider['find'] = async (options) => {
-        return vaultFind({
-            filesystem,
-            root: config.path,
-            parser,
-            options: options,
-        })
-    }
-
-    const create: DataProvider['create'] = async (options) => {
-        return vaultCreate({
-            filesystem,
-            root: config.path,
-            parser,
-            options,
-            makeId,
-        })
-    }
-
-    const update: DataProvider['update'] = async (payload) => {
-        return vaultUpdate({
-            filesystem,
-            root: config.path,
-            parser,
-            options: payload,
-        })
-    }
-
-    const destroy: DataProvider['destroy'] = async (payload) => {
-        return vaultDestroy({
-            filesystem,
-            parser,
-            root: config.path,
-            options: payload,
-        })
+    const common = {
+        filesystem,
+        root: config.path,
     }
 
     return {
-        lock,
-        lockItem,
-        unlock,
-        unlockItem,
-        list,
-        find,
-        create,
-        update,
-        destroy,
-        auth,
-        init,
+        list: (options = {}) => list({ ...common, parser, options }),
+        find: (options) => find({ ...common, parser, options }),
+        create: (options) => create({ ...common, parser, options, makeId }),
+        update: (options) => update({ ...common, parser, options }),
+        destroy: (options) => destroy({ ...common, parser, options }),
+        init: (options: any) => init({ ...common, options }),
+        auth: (options: any) => auth({ ...common, options }),
+        lock: (options: any) => lock({ ...common, parser, options }),
+        lockItem: (options: any) => lockItem({ ...common, filesystem, options }),
+        unlock: (options: any) => unlock({ ...common, parser, options }),
+        unlockItem: (options: any) => unlockItem({ ...common, options }),
     }
 })
