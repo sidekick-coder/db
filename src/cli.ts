@@ -57,21 +57,23 @@ async function run() {
         root: folder,
     })
 
-    const options: any = parseOptions(process.argv.slice(2))
-
-    // view
-    if (options.view) {
-        // try to find view in list
-        const view = databaseDefinition?.view?.sources?.find((v) => v.name === options.view)
-
-        merge(options, omit(view, 'name'))
-    }
+    const options = parseOptions(process.argv.slice(2), {
+        databaseDefinition,
+    })
 
     const renderName = options.render || 'console'
 
     const render = createRenderer({
         renders: [consoleRender],
     })
+
+    if (name === 'show-options') {
+        return console.log(JSON.stringify(options, null, 2))
+    }
+
+    if (name === 'show-definition') {
+        return console.log(JSON.stringify(databaseDefinition, null, 2))
+    }
 
     if (name == 'list') {
         const response = await database.list(options)

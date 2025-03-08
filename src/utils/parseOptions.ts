@@ -39,8 +39,6 @@ export function parseOptions(args: string[], options?: Options) {
         flags
     )
 
-    console.log('result', result)
-
     // view
     if (result.view && options?.databaseDefinition) {
         // try to find view in list
