@@ -1,6 +1,7 @@
 import { defineProvider } from '@/core/provider/defineProvider.js'
 
 import { v, validate } from '@/core/validator/index.js'
+import { schema as where } from '@/core/database/where.js'
 import { parsers } from '@/core/parsers/index.js'
 
 import { update } from './update.js'
@@ -10,6 +11,7 @@ import { create } from './create.js'
 import { find } from './find.js'
 import { destroy } from './destroy.js'
 import { createStrategies } from '@/core/idStrategy/createStrategies.js'
+import cp from 'child_process'
 
 export const provider = defineProvider((config, instanceOptions) => {
     const filesystem = createFilesystem({
@@ -48,7 +50,50 @@ export const provider = defineProvider((config, instanceOptions) => {
 
     const makeId = () => strategy.create(id_strategy.options)
 
+    async function open(payload: any) {
+        const options = validate(
+            (v) =>
+                v.object({
+                    where: v.optional(where),
+                    editor: v.optional(v.string()),
+                }),
+            payload
+        )
+        const item = await find({
+            root,
+            filesystem,
+            parser,
+            options,
+        })
+
+        if (!item) {
+            throw new Error('Item not found')
+        }
+
+        let bin: string
+
+        if (process.env.EDITOR) {
+            bin = process.env.EDITOR
+        }
+
+        if (payload.editor) {
+            bin = payload.editor
+        }
+
+        if (!bin) {
+            throw new Error(
+                'No editor found, please set the EDITOR environment variable or pass the editor option'
+            )
+        }
+
+        cp.spawn(bin, [item.filename], {
+            stdio: 'inherit',
+            env: process.env,
+        })
+    }
+
     return {
+        open,
         list: (options = {}) =>
             list({
                 root,
