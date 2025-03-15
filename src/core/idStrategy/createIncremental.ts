@@ -3,6 +3,7 @@ import { validate } from '../validator/validate.js'
 import { Strategy } from './types.js'
 
 export function pad(value: number, size: number) {
+    return value.toString().padStart(size, '0')
     return `${'0'.repeat(size - 1)}${value}`.slice(-size)
 }
 
