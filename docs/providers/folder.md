@@ -33,3 +33,31 @@ provider:
         format: markdown
         id_strategy: increment
 ```
+
+## Methods 
+
+There are some custom methods that you can use to interact with the provider.
+
+### open 
+This method will open the file in the default editor of the system, it uses a where statement to find the file to open.
+
+```bash 
+db open -w id=01
+```
+
+To set which editor to use you can set the `EDITOR` environment variable.
+
+```bash 
+# windows 
+$env:EDITOR = "notepad"
+
+# linux
+export EDITOR=nvim
+```
+
+Or you pass the editor as a flag.
+
+```bash 
+db open -w id=01 --editor nvim
+```
+> [!INFO] Some editors may need the full path to be set in the `EDITOR` environment variable to work properly.
