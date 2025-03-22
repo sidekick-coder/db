@@ -33,6 +33,8 @@ export function parseOptions(args: string[], options?: Options) {
                     include: v.optional(v.extras.stringList),
                     exclude: v.optional(v.extras.stringList),
                     render_options: v.optional(v.extras.vars, {}),
+                    sortBy: v.optional(v.extras.stringList),
+                    sortDesc: v.optional(v.extras.array(v.boolean())),
                 },
                 v.any()
             ),

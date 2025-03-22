@@ -75,6 +75,10 @@ async function run() {
         return console.log(JSON.stringify(databaseDefinition, null, 2))
     }
 
+    if (name === 'list-databases') {
+        return console.log(config.databases.sources.map((s) => s.data.name))
+    }
+
     if (name == 'list') {
         const response = await database.list(options)
 
